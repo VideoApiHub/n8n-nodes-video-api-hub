@@ -380,9 +380,22 @@ async function executeVideo(
 
 	// ── Create from Design ───────────────────────────────────
 	if (operation === 'createFromDesign') {
+		const preset = this.getNodeParameter('canvasPreset', i) as string;
+		let specWidth: number;
+		let specHeight: number;
+
+		if (preset === 'custom') {
+			specWidth = this.getNodeParameter('canvasWidth', i) as number;
+			specHeight = this.getNodeParameter('canvasHeight', i) as number;
+		} else {
+			const [w, h] = preset.split('x').map(Number);
+			specWidth = w;
+			specHeight = h;
+		}
+
 		const spec: IDataObject = {
-			width: this.getNodeParameter('canvasWidth', i) as number,
-			height: this.getNodeParameter('canvasHeight', i) as number,
+			width: specWidth,
+			height: specHeight,
 			duration_seconds: this.getNodeParameter('designDuration', i) as number,
 			fps: this.getNodeParameter('fps', i) as number,
 		};
@@ -400,16 +413,53 @@ async function executeVideo(
 			};
 		}
 
-		const layersJson = this.getNodeParameter('layers', i, '[]') as string;
-		try {
-			spec.layers = typeof layersJson === 'string' ? JSON.parse(layersJson) : layersJson;
-		} catch {
-			throw new NodeOperationError(
-				this.getNode(),
-				'The Layers field contains invalid JSON. Please check the format.',
-				{ itemIndex: i },
-			);
-		}
+		const layersInput = this.getNodeParameter('designLayers', i, {}) as {
+			layerValues?: Array<IDataObject>;
+		};
+
+		spec.layers = (layersInput.layerValues ?? []).map((entry) => {
+			const layer: IDataObject = { type: entry.type as string };
+			const layerType = entry.type as string;
+
+			if (layerType === 'text' && entry.text) layer.text = entry.text;
+			if (['image', 'gif', 'video', 'audio'].includes(layerType)) {
+				if (entry.url) layer.url = entry.url;
+				else if (entry.key) layer.key = entry.key;
+			}
+			if (['rectangle', 'circle'].includes(layerType) && entry.color) {
+				layer.color = entry.color;
+			}
+
+			if (layerType !== 'audio') {
+				if (entry.x) layer.x = entry.x;
+				if (entry.y) layer.y = entry.y;
+				if (entry.width) layer.width = entry.width;
+				if (entry.height) layer.height = entry.height;
+			}
+
+			if (entry.startSeconds) layer.start_seconds = entry.startSeconds;
+			if (entry.durationSeconds) layer.duration_seconds = entry.durationSeconds;
+
+			const style = (entry.style ?? {}) as IDataObject;
+			if (style.opacity !== undefined && style.opacity !== 1) layer.opacity = style.opacity;
+			if (style.animation && style.animation !== 'none') layer.animation = style.animation;
+			if (style.animationSpeed !== undefined && style.animationSpeed !== 1) {
+				layer.animation_speed = style.animationSpeed;
+			}
+
+			if (layerType === 'text') {
+				if (style.fontFamily) layer.font_family = style.fontFamily;
+				if (style.fontFileKey) layer.font_file_key = style.fontFileKey;
+				if (style.fontSize) layer.font_size = style.fontSize;
+				if (style.fontColor) layer.font_color = style.fontColor;
+				if (style.fontWeight) layer.font_weight = style.fontWeight;
+				if (style.fontStyle && style.fontStyle !== 'normal') layer.font_style = style.fontStyle;
+				if (style.align && style.align !== 'left') layer.align = style.align;
+				if (style.textBg) layer.text_bg = style.textBg;
+			}
+
+			return layer;
+		});
 
 		return apiRequest.call(this, 'POST', '/v1/video/create', {
 			output_key: outputKey,

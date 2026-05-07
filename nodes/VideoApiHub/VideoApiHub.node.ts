@@ -38,15 +38,15 @@ async function apiRequest(
 
 export class VideoApiHub implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'VideoApiHub',
+		displayName: 'Video Api Hub',
 		name: 'videoApiHub',
 		icon: 'file:videoApiHub.svg',
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"]}}',
-		description: 'Process, create, and transform videos with VideoApiHub',
+		description: 'Process, create, and transform videos with Video Api Hub',
 		defaults: {
-			name: 'VideoApiHub',
+			name: 'Video Api Hub',
 		},
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],

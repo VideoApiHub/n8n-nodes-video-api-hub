@@ -123,7 +123,7 @@ export const videoDescription: INodeProperties[] = [
 		displayOptions: { show: { ...showForVideo, operation: opsWithInput } },
 		default: '',
 		placeholder: 'uploads/my-video.mp4',
-		description: 'Path to your file in VideoApiHub storage',
+		description: 'Path to your file in Video Api Hub storage',
 	},
 
 	// ── Shared: Save Result As ───────────────────────────────

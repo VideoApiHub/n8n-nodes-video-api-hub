@@ -8,7 +8,7 @@ import type {
 export class VideoApiHubApi implements ICredentialType {
 	name = 'videoApiHubApi';
 
-	displayName = 'VideoApiHub API';
+	displayName = 'Video Api Hub API';
 
 	documentationUrl = 'https://videoapihub.com/docs';
 

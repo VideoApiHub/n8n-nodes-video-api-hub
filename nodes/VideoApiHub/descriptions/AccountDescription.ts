@@ -20,7 +20,7 @@ export const accountDescription: INodeProperties[] = [
 				name: 'Health Check',
 				value: 'healthCheck',
 				action: 'Check if the service is running',
-				description: 'Verify that VideoApiHub is up and running',
+				description: 'Verify that Video Api Hub is up and running',
 			},
 			{
 				name: 'View Plans',

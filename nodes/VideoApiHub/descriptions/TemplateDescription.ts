@@ -36,9 +36,9 @@ export const templateDescription: INodeProperties[] = [
 		type: 'string',
 		required: true,
 		displayOptions: { show: { ...showForTemplate, operation: ['render'] } },
-		default: '',
-		placeholder: 'outputs/my-video.mp4',
-		description: 'Where to save the rendered video in your storage',
+		default: 'default.mp4',
+		placeholder: 'my-video.mp4',
+		description: 'File name for the rendered video (e.g. promo.mp4)',
 	},
 	{
 		displayName: 'Variables',

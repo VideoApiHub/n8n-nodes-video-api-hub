@@ -13,6 +13,7 @@ import { fileDescription } from './descriptions/FileDescription';
 import { videoDescription } from './descriptions/VideoDescription';
 import { templateDescription } from './descriptions/TemplateDescription';
 import { accountDescription } from './descriptions/AccountDescription';
+import { jobDescription } from './descriptions/JobDescription';
 
 async function apiRequest(
 	this: IExecuteFunctions,
@@ -64,8 +65,9 @@ export class VideoApiHub implements INodeType {
 				noDataExpression: true,
 				options: [
 					{ name: 'Video', value: 'video' },
-					{ name: 'File', value: 'file' },
 					{ name: 'Template', value: 'template' },
+					{ name: 'File', value: 'file' },
+					{ name: 'Job', value: 'job' },
 					{ name: 'Account', value: 'account' },
 				],
 				default: 'video',
@@ -73,6 +75,7 @@ export class VideoApiHub implements INodeType {
 			...fileDescription,
 			...videoDescription,
 			...templateDescription,
+			...jobDescription,
 			...accountDescription,
 		],
 	};
@@ -93,6 +96,8 @@ export class VideoApiHub implements INodeType {
 					responseData = await executeVideo.call(this, operation, i);
 				} else if (resource === 'template') {
 					responseData = await executeTemplate.call(this, operation, i);
+				} else if (resource === 'job') {
+					responseData = await executeJob.call(this, operation, i);
 				} else if (resource === 'account') {
 					responseData = await executeAccount.call(this, operation, i);
 				} else {
@@ -164,7 +169,8 @@ async function executeVideo(
 	operation: string,
 	i: number,
 ): Promise<IDataObject> {
-	const outputKey = this.getNodeParameter('outputKey', i) as string;
+	const rawOutputKey = this.getNodeParameter('outputKey', i) as string;
+	const outputKey = rawOutputKey.startsWith('outputs/') ? rawOutputKey : `outputs/${rawOutputKey}`;
 
 	const needsInput = [
 		'clip',
@@ -438,7 +444,8 @@ async function executeTemplate(
 ): Promise<IDataObject> {
 	if (operation === 'render') {
 		const templateId = this.getNodeParameter('templateId', i) as string;
-		const outputKey = this.getNodeParameter('templateOutputKey', i) as string;
+		const rawOutputKey = this.getNodeParameter('templateOutputKey', i) as string;
+		const outputKey = rawOutputKey.startsWith('outputs/') ? rawOutputKey : `outputs/${rawOutputKey}`;
 
 		const varsData = this.getNodeParameter('templateVariables', i, {}) as {
 			variableValues?: Array<{ name: string; value: string }>;
@@ -460,6 +467,25 @@ async function executeTemplate(
 	}
 
 	throw new NodeOperationError(this.getNode(), `Unknown template operation: ${operation}`, {
+		itemIndex: i,
+	});
+}
+
+// ═══════════════════════════════════════════════════════════════
+// JOB
+// ═══════════════════════════════════════════════════════════════
+
+async function executeJob(
+	this: IExecuteFunctions,
+	operation: string,
+	i: number,
+): Promise<IDataObject> {
+	if (operation === 'getStatus') {
+		const taskId = this.getNodeParameter('taskId', i) as string;
+		return apiRequest.call(this, 'GET', `/v1/jobs/${encodeURIComponent(taskId)}`);
+	}
+
+	throw new NodeOperationError(this.getNode(), `Unknown job operation: ${operation}`, {
 		itemIndex: i,
 	});
 }

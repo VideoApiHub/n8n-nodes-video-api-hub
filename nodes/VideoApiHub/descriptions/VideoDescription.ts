@@ -27,6 +27,20 @@ export const videoDescription: INodeProperties[] = [
 		noDataExpression: true,
 		displayOptions: { show: showForVideo },
 		options: [
+			// ── Create ──────────────────────────────
+			{
+				name: 'Create from Design',
+				value: 'createFromDesign',
+				action: 'Create a video from a design',
+				description: 'Build a video from a JSON design with text, images, and shapes',
+			},
+			{
+				name: 'Create Slideshow',
+				value: 'slideshow',
+				action: 'Create a video from images',
+				description: 'Turn a series of images into a video with optional music',
+			},
+			// ── Edit ────────────────────────────────
 			{
 				name: 'Clip',
 				value: 'clip',
@@ -40,16 +54,23 @@ export const videoDescription: INodeProperties[] = [
 				description: 'Extract several time ranges from your video at once',
 			},
 			{
-				name: 'Get Thumbnail',
-				value: 'thumbnail',
-				action: 'Capture a frame as an image',
-				description: 'Save a single frame from your video as a JPEG image',
+				name: 'Resize',
+				value: 'resize',
+				action: 'Resize a video',
+				description: 'Change the dimensions or aspect ratio of your video',
 			},
 			{
-				name: 'Take Screenshots',
-				value: 'screenshots',
-				action: 'Capture multiple frames as images',
-				description: 'Save multiple frames from your video as JPEG images',
+				name: 'Convert Format',
+				value: 'convertFormat',
+				action: 'Convert a video to another format',
+				description: 'Change the file format of your video',
+			},
+			// ── Audio ───────────────────────────────
+			{
+				name: 'Add Audio',
+				value: 'addAudio',
+				action: 'Add audio to a video',
+				description: 'Add background music or replace the existing audio',
 			},
 			{
 				name: 'Remove Audio',
@@ -63,23 +84,12 @@ export const videoDescription: INodeProperties[] = [
 				action: 'Extract audio from a video',
 				description: 'Save the audio track from your video as an MP3 file',
 			},
+			// ── Thumbnails ──────────────────────────
 			{
-				name: 'Add Audio',
-				value: 'addAudio',
-				action: 'Add audio to a video',
-				description: 'Add background music or replace the existing audio',
-			},
-			{
-				name: 'Convert Format',
-				value: 'convertFormat',
-				action: 'Convert a video to another format',
-				description: 'Change the file format of your video',
-			},
-			{
-				name: 'Resize',
-				value: 'resize',
-				action: 'Resize a video',
-				description: 'Change the dimensions or aspect ratio of your video',
+				name: 'Get Thumbnail',
+				value: 'thumbnail',
+				action: 'Capture a frame as an image',
+				description: 'Save a single frame from your video as a JPEG image',
 			},
 			{
 				name: 'Thumbnail with Text',
@@ -88,17 +98,12 @@ export const videoDescription: INodeProperties[] = [
 				description: 'Capture a frame and add text or a logo on top',
 			},
 			{
-				name: 'Create Slideshow',
-				value: 'slideshow',
-				action: 'Create a video from images',
-				description: 'Turn a series of images into a video with optional music',
+				name: 'Take Screenshots',
+				value: 'screenshots',
+				action: 'Capture multiple frames as images',
+				description: 'Save multiple frames from your video as JPEG images',
 			},
-			{
-				name: 'Create from Design',
-				value: 'createFromDesign',
-				action: 'Create a video from a design',
-				description: 'Build a video from a JSON design with text, images, and shapes',
-			},
+			// ── Advanced ────────────────────────────
 			{
 				name: 'Run Custom Command',
 				value: 'customCommand',
@@ -106,7 +111,7 @@ export const videoDescription: INodeProperties[] = [
 				description: 'Run a custom FFmpeg command for advanced processing',
 			},
 		],
-		default: 'clip',
+		default: 'createFromDesign',
 	},
 
 	// ── Shared: Source File ──────────────────────────────────
@@ -128,9 +133,9 @@ export const videoDescription: INodeProperties[] = [
 		type: 'string',
 		required: true,
 		displayOptions: { show: { ...showForVideo, operation: allVideoOps } },
-		default: '',
-		placeholder: 'outputs/result.mp4',
-		description: 'Where to save the result in your storage',
+		default: 'default.mp4',
+		placeholder: 'my-video.mp4',
+		description: 'File name for the result (e.g. my-clip.mp4)',
 	},
 
 	// ═══════════════════════════════════════════════════════════

@@ -1,0 +1,13 @@
+{
+	"node": "n8n-nodes-video-api-hub.videoApiHub",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Video Processing"],
+	"resources": {
+		"primaryDocumentation": [
+			{
+				"url": "https://videoapihub.com/docs"
+			}
+		]
+	}
+}

@@ -1,28 +1,31 @@
 {
-	"name": "n8n-nodes-<...>",
-	"version": "0.1.0",
-	"description": "",
+	"name": "n8n-nodes-video-api-hub",
+	"version": "0.1.1",
+	"description": "n8n nodes for VideoApiHub – process, create, and transform videos",
 	"license": "MIT",
-	"homepage": "",
+	"homepage": "https://github.com/VideoApiHub/n8n-nodes-video-api-hub",
 	"keywords": [
-		"n8n-community-node-package"
+		"n8n-community-node-package",
+		"video",
+		"video-processing",
+		"videoapihub"
 	],
 	"author": {
-		"name": "",
-		"email": ""
+		"name": "VideoApiHub"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/<...>/n8n-nodes-<...>.git"
+		"url": "https://github.com/VideoApiHub/n8n-nodes-video-api-hub.git"
 	},
 	"scripts": {
-		"build": "n8n-node build",
+		"build": "tsc && npm run copy-assets",
+		"copy-assets": "cp nodes/VideoApiHub/videoApiHub.svg dist/nodes/VideoApiHub/",
 		"build:watch": "tsc --watch",
 		"dev": "n8n-node dev",
 		"lint": "n8n-node lint",
 		"lint:fix": "n8n-node lint --fix",
 		"release": "n8n-node release",
-		"prepublishOnly": "n8n-node prerelease"
+		"prepublishOnly": "npm run build"
 	},
 	"files": [
 		"dist"
@@ -31,12 +34,10 @@
 		"n8nNodesApiVersion": 1,
 		"strict": true,
 		"credentials": [
-			"dist/credentials/GithubIssuesApi.credentials.js",
-			"dist/credentials/GithubIssuesOAuth2Api.credentials.js"
+			"dist/credentials/VideoApiHubApi.credentials.js"
 		],
 		"nodes": [
-			"dist/nodes/GithubIssues/GithubIssues.node.js",
-			"dist/nodes/Example/Example.node.js"
+			"dist/nodes/VideoApiHub/VideoApiHub.node.js"
 		]
 	},
 	"devDependencies": {

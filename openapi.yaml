@@ -1,0 +1,607 @@
+openapi: 3.0.3
+info:
+  title: VideoAPIHub API
+  description: |
+    Video processing and JSON-to-video rendering API.
+
+    ## Authentication
+    All `/v1` endpoints (except `/v1/pricing`) require a Bearer token:
+    ```
+    Authorization: Bearer <your-api-key>
+    ```
+
+    ## Rate Limiting
+    Response headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`
+
+    ## Usage Limits
+    Video endpoints count toward monthly usage. Headers: `X-Usage-Tier`, `X-Usage-Month`, `X-Usage-Limit`, `X-Usage-Plan`
+  version: "1.0.0"
+
+servers:
+  - url: https://api.videoapihub.com
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Storage
+  - name: Video
+  - name: Templates
+  - name: Pricing
+  - name: Health
+
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Health check
+      tags: [Health]
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /v1/pricing:
+    get:
+      operationId: listPricing
+      summary: List plans and pricing
+      tags: [Pricing]
+      security: []
+      responses:
+        "200":
+          description: Pricing plans
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plans:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PricingPlan"
+
+  /v1/storage/upload-url:
+    post:
+      operationId: createUploadUrl
+      summary: Get a presigned upload URL
+      tags: [Storage]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadURLRequest"
+      responses:
+        "200":
+          description: Presigned upload URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadURLResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /v1/storage/download-url:
+    post:
+      operationId: createDownloadUrl
+      summary: Get a presigned download URL
+      tags: [Storage]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DownloadURLRequest"
+      responses:
+        "200":
+          description: Presigned download URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DownloadURLResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /v1/video/clip:
+    post:
+      operationId: videoClip
+      summary: Clip a time segment
+      tags: [Video]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoJobRequest"
+            example:
+              input_key: uploads/intro.mp4
+              output_key: outputs/clip.mp4
+              options: { start_seconds: 5, duration_seconds: 10 }
+      responses:
+        "202": { $ref: "#/components/responses/JobAccepted" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/UsageLimitExceeded" }
+
+  /v1/video/multi-clip:
+    post:
+      operationId: videoMultiClip
+      summary: Extract multiple segments
+      tags: [Video]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoJobRequest"
+            example:
+              input_key: uploads/intro.mp4
+              output_key: outputs/clips-manifest.json
+              options:
+                segments:
+                  - { start_seconds: 0, duration_seconds: 5 }
+                  - { start_seconds: 30, duration_seconds: 10 }
+      responses:
+        "202": { $ref: "#/components/responses/JobAccepted" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/UsageLimitExceeded" }
+
+  /v1/video/thumbnail:
+    post:
+      operationId: videoThumbnail
+      summary: Extract a single frame as JPEG
+      tags: [Video]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoJobRequest"
+            example:
+              input_key: uploads/intro.mp4
+              output_key: outputs/thumb.jpg
+              options: { at_second: 3.5 }
+      responses:
+        "202": { $ref: "#/components/responses/JobAccepted" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/UsageLimitExceeded" }
+
+  /v1/video/screenshots:
+    post:
+      operationId: videoScreenshots
+      summary: Capture multiple frames
+      description: "Modes: count (default), timestamps, random"
+      tags: [Video]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoJobRequest"
+            example:
+              input_key: uploads/intro.mp4
+              output_key: outputs/screenshots.json
+              options: { mode: timestamps, timestamps: [1.5, 10, 30] }
+      responses:
+        "202": { $ref: "#/components/responses/JobAccepted" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/UsageLimitExceeded" }
+
+  /v1/video/remove-audio:
+    post:
+      operationId: videoRemoveAudio
+      summary: Strip the audio track
+      tags: [Video]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoJobRequest"
+            example:
+              input_key: uploads/intro.mp4
+              output_key: outputs/muted.mp4
+      responses:
+        "202": { $ref: "#/components/responses/JobAccepted" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/UsageLimitExceeded" }
+
+  /v1/video/extract-audio:
+    post:
+      operationId: videoExtractAudio
+      summary: Extract audio as MP3
+      tags: [Video]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoJobRequest"
+            example:
+              input_key: uploads/intro.mp4
+              output_key: outputs/audio.mp3
+      responses:
+        "202": { $ref: "#/components/responses/JobAccepted" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/UsageLimitExceeded" }
+
+  /v1/video/add-audio:
+    post:
+      operationId: videoAddAudio
+      summary: Add or replace audio
+      tags: [Video]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoJobRequest"
+            example:
+              input_key: uploads/intro.mp4
+              output_key: outputs/with-music.mp4
+              options: { audio_key: uploads/bgmusic.mp3, mix_mode: mix, volume: 0.5 }
+      responses:
+        "202": { $ref: "#/components/responses/JobAccepted" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/UsageLimitExceeded" }
+
+  /v1/video/convert-format:
+    post:
+      operationId: videoConvertFormat
+      summary: Transcode to another format
+      tags: [Video]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoJobRequest"
+            example:
+              input_key: uploads/intro.mp4
+              output_key: outputs/converted.webm
+              options: { format: webm }
+      responses:
+        "202": { $ref: "#/components/responses/JobAccepted" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/UsageLimitExceeded" }
+
+  /v1/video/convert-aspect-ratio:
+    post:
+      operationId: videoConvertAspectRatio
+      summary: Resize to a new aspect ratio
+      tags: [Video]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoJobRequest"
+            example:
+              input_key: uploads/intro.mp4
+              output_key: outputs/vertical.mp4
+              options: { aspect_ratio: "9:16", fit_mode: cover }
+      responses:
+        "202": { $ref: "#/components/responses/JobAccepted" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/UsageLimitExceeded" }
+
+  /v1/video/thumbnail-with-text:
+    post:
+      operationId: videoThumbnailWithText
+      summary: Frame capture with text/image overlay
+      tags: [Video]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoJobRequest"
+            example:
+              input_key: uploads/intro.mp4
+              output_key: outputs/thumb-text.jpg
+              options: { at_second: 5, text: "Episode 1", font_size: 64, position: bottom_center }
+      responses:
+        "202": { $ref: "#/components/responses/JobAccepted" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/UsageLimitExceeded" }
+
+  /v1/video/image-sequence:
+    post:
+      operationId: videoImageSequence
+      summary: Create video from image sequence
+      description: No `input_key` needed.
+      tags: [Video]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoJobRequest"
+            example:
+              output_key: outputs/slideshow.mp4
+              options:
+                segments:
+                  - { image_key: uploads/slide1.jpg, duration_seconds: 3 }
+                  - { image_key: uploads/slide2.jpg, duration_seconds: 4 }
+                audio_key: uploads/bgmusic.mp3
+      responses:
+        "202": { $ref: "#/components/responses/JobAccepted" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/UsageLimitExceeded" }
+
+  /v1/video/ffmpeg-custom:
+    post:
+      operationId: videoFfmpegCustom
+      summary: Run a custom FFmpeg command
+      description: Use `{input}` and `{output}` placeholders (both required).
+      tags: [Video]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoJobRequest"
+            example:
+              input_key: uploads/intro.mp4
+              output_key: outputs/custom.mp4
+              options:
+                command: '-i {input} -vf "scale=640:480" -c:a copy {output}'
+      responses:
+        "202": { $ref: "#/components/responses/JobAccepted" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/UsageLimitExceeded" }
+
+  /v1/video/create:
+    post:
+      operationId: videoCreate
+      summary: Create video from JSON spec
+      description: |
+        Render an MP4 from a JSON spec with canvas, background, and composable layers.
+      tags: [Video]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JSONVideoRenderRequest"
+      responses:
+        "202": { $ref: "#/components/responses/JobAccepted" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/UsageLimitExceeded" }
+
+  /v1/templates/{template_id}/render:
+    post:
+      operationId: renderTemplate
+      summary: Render video from a template
+      tags: [Templates]
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RenderTemplateRequest"
+      responses:
+        "202":
+          description: Render queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  task_id: { type: string }
+                  template_id: { type: string }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404":
+          description: Template not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429": { $ref: "#/components/responses/UsageLimitExceeded" }
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+
+  responses:
+    JobAccepted:
+      description: Job queued
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              task_id: { type: string }
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Missing or invalid API key
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    UsageLimitExceeded:
+      description: Monthly limit exceeded
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+              tier: { type: string, enum: [normal, high_compute] }
+              plan: { type: string }
+              usage_month: { type: integer }
+              monthly_limit: { type: integer }
+              upgrade_url: { type: string }
+              message: { type: string }
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+
+    UploadURLRequest:
+      type: object
+      required: [content_type, file_name]
+      properties:
+        content_type: { type: string, example: video/mp4 }
+        file_name: { type: string, example: intro.mp4 }
+        display_name: { type: string }
+        file_size: { type: integer, format: int64 }
+
+    UploadURLResponse:
+      type: object
+      properties:
+        url: { type: string, format: uri }
+        key: { type: string }
+        headers: { type: object, additionalProperties: { type: string } }
+        expires_in_seconds: { type: integer, format: int64 }
+
+    DownloadURLRequest:
+      type: object
+      required: [key]
+      properties:
+        key: { type: string, example: outputs/result.mp4 }
+
+    DownloadURLResponse:
+      type: object
+      properties:
+        url: { type: string, format: uri }
+        key: { type: string }
+        headers: { type: object, additionalProperties: { type: string } }
+        expires_in_seconds: { type: integer, format: int64 }
+
+    VideoJobRequest:
+      type: object
+      required: [output_key]
+      properties:
+        input_key: { type: string, description: S3 key of the input file }
+        output_key: { type: string, description: S3 key for the output }
+        options: { type: object, additionalProperties: true }
+
+    JSONVideoRenderRequest:
+      type: object
+      required: [output_key, spec]
+      properties:
+        output_key: { type: string, example: outputs/video.mp4 }
+        spec:
+          $ref: "#/components/schemas/JSONVideoRenderSpec"
+
+    JSONVideoRenderSpec:
+      type: object
+      required: [width, height, duration_seconds, fps, background]
+      properties:
+        width: { type: integer, minimum: 64, maximum: 3840 }
+        height: { type: integer, minimum: 64, maximum: 3840 }
+        duration_seconds: { type: number, minimum: 0.01, maximum: 300 }
+        fps: { type: integer, minimum: 1, maximum: 60 }
+        background:
+          $ref: "#/components/schemas/JSONVideoBackground"
+        layers:
+          type: array
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/JSONVideoLayer"
+
+    JSONVideoBackground:
+      type: object
+      properties:
+        color: { type: string, pattern: "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$" }
+        gradient:
+          type: object
+          properties:
+            from: { type: string }
+            to: { type: string }
+            direction: { type: string, enum: [vertical, horizontal, diagonal] }
+
+    JSONVideoLayer:
+      type: object
+      required: [type]
+      properties:
+        type: { type: string, enum: [image, gif, video, audio, text, rectangle, circle] }
+        key: { type: string }
+        url: { type: string, format: uri }
+        text: { type: string }
+        align: { type: string, enum: [left, center, right] }
+        color: { type: string }
+        x: { type: integer }
+        y: { type: integer }
+        width: { type: integer }
+        height: { type: integer }
+        start_seconds: { type: number }
+        duration_seconds: { type: number }
+        animation: { type: string }
+        animation_speed: { type: number }
+        opacity: { type: number, minimum: 0, maximum: 1 }
+        font_family: { type: string }
+        font_file_key: { type: string }
+        font_size: { type: integer }
+        font_color: { type: string }
+        font_weight: { type: integer }
+        font_style: { type: string }
+        text_bg: { type: string }
+
+    RenderTemplateRequest:
+      type: object
+      required: [output_key]
+      properties:
+        output_key: { type: string }
+        variables:
+          type: object
+          additionalProperties: { type: string }
+          example: { headline: "Summer Sale!" }
+
+    PricingPlan:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        monthly: { type: object, properties: { price: { type: integer } } }
+        yearly: { type: object, properties: { price: { type: integer } } }
+        features: { type: array, items: { type: string } }
+        limits:
+          type: object
+          properties:
+            requests_per_day: { type: integer }
+            max_resolution: { type: string }
+        popular: { type: boolean }

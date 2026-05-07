@@ -1,0 +1,874 @@
+openapi: 3.0.3
+info:
+  title: VideoAPIHub Operations Reference
+  description: |
+    Detailed per-operation schema for `POST /v1/jobs`.
+
+    This companion spec documents every `options` payload for each supported operation.
+    Use it alongside the main `openapi.yaml` to build n8n nodes or client SDKs.
+
+    ## Common flow
+    1. Upload your input file via `POST /v1/upload-url` → PUT to the presigned URL.
+    2. Submit a job via `POST /v1/jobs` with the `input_key` from step 1.
+    3. Poll or wait for completion, then download via `POST /v1/download-url`.
+
+    ## Multi-output operations
+    Operations that produce multiple files (`multi_clip`, `screenshots`) write a JSON
+    manifest to `output_key` listing the individual item keys:
+    ```json
+    { "operation": "screenshots", "items": ["prefix/screenshot-001.jpg", ...], "created_at": "..." }
+    ```
+  version: "1.0.0"
+
+servers:
+  - url: https://api.videoapihub.com
+    description: Production
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: clip
+  - name: multi_clip
+  - name: thumbnail
+  - name: screenshots
+  - name: remove_audio
+  - name: extract_audio
+  - name: add_audio
+  - name: convert_format
+  - name: convert_aspect_ratio
+  - name: create_thumbnail_with_text
+  - name: image_sequence_video
+  - name: ffmpeg_custom
+
+paths:
+  /v1/video/clip:
+    post:
+      operationId: jobClip
+      summary: "Clip – extract a time segment from a video"
+      tags: [clip]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/BaseJobRequest"
+                - type: object
+                  properties:
+                    operation:
+                      type: string
+                      enum: [clip]
+                    options:
+                      $ref: "#/components/schemas/ClipOptions"
+            example:
+              operation: clip
+              input_key: uploads/20260507/intro.mp4
+              output_key: outputs/clip.mp4
+              options:
+                start_seconds: 5
+                duration_seconds: 10
+      responses:
+        "202":
+          $ref: "#/components/responses/JobAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/UsageLimitExceeded"
+
+  /v1/video/multi-clip:
+    post:
+      operationId: jobMultiClip
+      summary: "Multi Clip – extract multiple segments from a video"
+      description: |
+        Produces multiple clip files. A JSON manifest is written to `output_key`.
+        Individual clips are stored under `output_prefix` (or derived from `output_key`).
+
+        You can either provide an explicit `segments` array, or use the uniform `start_seconds` / `duration_seconds` / `gap_seconds` / `count` mode.
+      tags: [multi_clip]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/BaseJobRequest"
+                - type: object
+                  properties:
+                    operation:
+                      type: string
+                      enum: [multi_clip]
+                    options:
+                      $ref: "#/components/schemas/MultiClipOptions"
+            example:
+              operation: multi_clip
+              input_key: uploads/20260507/intro.mp4
+              output_key: outputs/clips-manifest.json
+              options:
+                segments:
+                  - start_seconds: 0
+                    duration_seconds: 5
+                  - start_seconds: 30
+                    duration_seconds: 10
+      responses:
+        "202":
+          $ref: "#/components/responses/JobAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/UsageLimitExceeded"
+
+  /v1/video/thumbnail:
+    post:
+      operationId: jobThumbnail
+      summary: "Thumbnail – extract a single frame as JPEG"
+      tags: [thumbnail]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/BaseJobRequest"
+                - type: object
+                  properties:
+                    operation:
+                      type: string
+                      enum: [thumbnail]
+                    options:
+                      $ref: "#/components/schemas/ThumbnailOptions"
+            example:
+              operation: thumbnail
+              input_key: uploads/20260507/intro.mp4
+              output_key: outputs/thumb.jpg
+              options:
+                at_second: 3.5
+      responses:
+        "202":
+          $ref: "#/components/responses/JobAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/UsageLimitExceeded"
+
+  /v1/video/screenshots:
+    post:
+      operationId: jobScreenshots
+      summary: "Screenshots – capture multiple frames as JPEG images"
+      description: |
+        Three modes are available:
+        - **count** (default): captures `count` frames, one per second from start.
+        - **timestamps**: captures at explicit second values.
+        - **random**: captures `count` frames at random positions (requires `video_duration`).
+
+        If only 1 screenshot is produced, it is written directly to `output_key`.
+        Otherwise a manifest JSON is written to `output_key`, individual files go under `output_prefix`.
+      tags: [screenshots]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/BaseJobRequest"
+                - type: object
+                  properties:
+                    operation:
+                      type: string
+                      enum: [screenshots]
+                    options:
+                      $ref: "#/components/schemas/ScreenshotsOptions"
+            example:
+              operation: screenshots
+              input_key: uploads/20260507/intro.mp4
+              output_key: outputs/screenshots-manifest.json
+              options:
+                mode: timestamps
+                timestamps: [1.5, 10, 30.2, 60]
+      responses:
+        "202":
+          $ref: "#/components/responses/JobAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/UsageLimitExceeded"
+
+  /v1/video/remove-audio:
+    post:
+      operationId: jobRemoveAudio
+      summary: "Remove Audio – strip the audio track from a video"
+      tags: [remove_audio]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/BaseJobRequest"
+                - type: object
+                  properties:
+                    operation:
+                      type: string
+                      enum: [remove_audio]
+            example:
+              operation: remove_audio
+              input_key: uploads/20260507/intro.mp4
+              output_key: outputs/muted.mp4
+      responses:
+        "202":
+          $ref: "#/components/responses/JobAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/UsageLimitExceeded"
+
+  /v1/video/extract-audio:
+    post:
+      operationId: jobExtractAudio
+      summary: "Extract Audio – extract the audio track as MP3"
+      tags: [extract_audio]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/BaseJobRequest"
+                - type: object
+                  properties:
+                    operation:
+                      type: string
+                      enum: [extract_audio]
+            example:
+              operation: extract_audio
+              input_key: uploads/20260507/intro.mp4
+              output_key: outputs/audio.mp3
+      responses:
+        "202":
+          $ref: "#/components/responses/JobAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/UsageLimitExceeded"
+
+  /v1/video/add-audio:
+    post:
+      operationId: jobAddAudio
+      summary: "Add Audio – overlay or replace audio on a video"
+      description: |
+        By default replaces the original audio. Use `mix_mode: mix` to overlay on top of the existing track.
+        Advanced options let you trim, delay, and adjust volume of the new audio.
+      tags: [add_audio]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/BaseJobRequest"
+                - type: object
+                  properties:
+                    operation:
+                      type: string
+                      enum: [add_audio]
+                    options:
+                      $ref: "#/components/schemas/AddAudioOptions"
+            example:
+              operation: add_audio
+              input_key: uploads/20260507/intro.mp4
+              output_key: outputs/with-music.mp4
+              options:
+                audio_key: uploads/20260507/bgmusic.mp3
+                mix_mode: mix
+                volume: 0.5
+      responses:
+        "202":
+          $ref: "#/components/responses/JobAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/UsageLimitExceeded"
+
+  /v1/video/convert-format:
+    post:
+      operationId: jobConvertFormat
+      summary: "Convert Format – transcode a video to another container/codec"
+      tags: [convert_format]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/BaseJobRequest"
+                - type: object
+                  properties:
+                    operation:
+                      type: string
+                      enum: [convert_format]
+                    options:
+                      $ref: "#/components/schemas/ConvertFormatOptions"
+            example:
+              operation: convert_format
+              input_key: uploads/20260507/intro.mp4
+              output_key: outputs/converted.webm
+              options:
+                format: webm
+      responses:
+        "202":
+          $ref: "#/components/responses/JobAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/UsageLimitExceeded"
+
+  /v1/video/convert-aspect-ratio:
+    post:
+      operationId: jobConvertAspectRatio
+      summary: "Convert Aspect Ratio – resize/crop a video to a new aspect ratio"
+      description: |
+        Provide either an `aspect_ratio` preset string (e.g. `"16:9"`, `"9:16"`, `"1:1"`)
+        or explicit `width` + `height` in pixels.
+
+        `fit_mode` controls how the video is fitted:
+        - `cover` (default): scale + crop to fill the target frame
+        - `contain`: scale to fit, adding black bars if needed
+      tags: [convert_aspect_ratio]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/BaseJobRequest"
+                - type: object
+                  properties:
+                    operation:
+                      type: string
+                      enum: [convert_aspect_ratio]
+                    options:
+                      $ref: "#/components/schemas/ConvertAspectRatioOptions"
+            example:
+              operation: convert_aspect_ratio
+              input_key: uploads/20260507/intro.mp4
+              output_key: outputs/vertical.mp4
+              options:
+                aspect_ratio: "9:16"
+                fit_mode: cover
+      responses:
+        "202":
+          $ref: "#/components/responses/JobAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/UsageLimitExceeded"
+
+  /v1/video/thumbnail-with-text:
+    post:
+      operationId: jobCreateThumbnailWithText
+      summary: "Thumbnail with Text – extract a frame and add text/image overlay"
+      description: |
+        Captures a frame at `at_second` and composites text and/or an overlay image on top.
+        At least one of `text` or `overlay_image_key` is required.
+      tags: [create_thumbnail_with_text]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/BaseJobRequest"
+                - type: object
+                  properties:
+                    operation:
+                      type: string
+                      enum: [create_thumbnail_with_text]
+                    options:
+                      $ref: "#/components/schemas/ThumbnailWithTextOptions"
+            example:
+              operation: create_thumbnail_with_text
+              input_key: uploads/20260507/intro.mp4
+              output_key: outputs/thumb-text.jpg
+              options:
+                at_second: 5
+                text: "Episode 1"
+                font_size: 64
+                font_color: white
+                position: bottom_center
+                effect: shadow
+      responses:
+        "202":
+          $ref: "#/components/responses/JobAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/UsageLimitExceeded"
+
+  /v1/video/image-sequence:
+    post:
+      operationId: jobImageSequenceVideo
+      summary: "Image Sequence Video – create a video from a series of images"
+      description: |
+        Each segment specifies an S3 image key and how long it should be shown.
+        Optionally add background audio via `audio_key`.
+        **No `input_key` is needed** for this operation.
+      tags: [image_sequence_video]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/BaseJobRequest"
+                - type: object
+                  properties:
+                    operation:
+                      type: string
+                      enum: [image_sequence_video]
+                    input_key:
+                      description: Not required for this operation
+                    options:
+                      $ref: "#/components/schemas/ImageSequenceOptions"
+            example:
+              operation: image_sequence_video
+              output_key: outputs/slideshow.mp4
+              options:
+                segments:
+                  - image_key: uploads/slide1.jpg
+                    duration_seconds: 3
+                  - image_key: uploads/slide2.jpg
+                    duration_seconds: 4
+                  - image_key: uploads/slide3.jpg
+                    duration_seconds: 3
+                audio_key: uploads/bgmusic.mp3
+      responses:
+        "202":
+          $ref: "#/components/responses/JobAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/UsageLimitExceeded"
+
+  /v1/video/ffmpeg-custom:
+    post:
+      operationId: jobFfmpegCustom
+      summary: "FFmpeg Custom – run an arbitrary FFmpeg command"
+      description: |
+        Pass a raw FFmpeg command string or an args array. Use `{input}` and `{output}`
+        as placeholders — they will be replaced with the actual local file paths.
+        Both placeholders are **required**.
+
+        The leading `ffmpeg` word is automatically stripped if present.
+      tags: [ffmpeg_custom]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/BaseJobRequest"
+                - type: object
+                  properties:
+                    operation:
+                      type: string
+                      enum: [ffmpeg_custom]
+                    options:
+                      $ref: "#/components/schemas/FfmpegCustomOptions"
+            example:
+              operation: ffmpeg_custom
+              input_key: uploads/20260507/intro.mp4
+              output_key: outputs/custom.mp4
+              options:
+                command: "-i {input} -vf \"scale=640:480\" -c:a copy {output}"
+      responses:
+        "202":
+          $ref: "#/components/responses/JobAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/UsageLimitExceeded"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+
+  responses:
+    JobAccepted:
+      description: Job accepted and queued for processing
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              task_id:
+                type: string
+                description: Unique task identifier to track the job
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Missing or invalid API key
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    UsageLimitExceeded:
+      description: Monthly usage limit reached
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              tier:
+                type: string
+              plan:
+                type: string
+              usage_month:
+                type: integer
+              monthly_limit:
+                type: integer
+              upgrade_url:
+                type: string
+              message:
+                type: string
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    BaseJobRequest:
+      type: object
+      required: [operation, output_key]
+      properties:
+        operation:
+          type: string
+          description: The video processing operation
+        input_key:
+          type: string
+          description: S3 object key of the input file
+        output_key:
+          type: string
+          description: S3 object key where output is written
+
+    # ── clip ──────────────────────────────────────────────────────
+
+    ClipOptions:
+      type: object
+      properties:
+        start_seconds:
+          type: number
+          format: double
+          description: Start time in seconds
+          default: 0
+          example: 5
+        duration_seconds:
+          type: number
+          format: double
+          description: Duration of the clip in seconds
+          default: 5
+          example: 10
+
+    # ── multi_clip ────────────────────────────────────────────────
+
+    MultiClipOptions:
+      type: object
+      description: |
+        Provide **either** a `segments` array for precise control, **or** use the uniform mode with `start_seconds`, `duration_seconds`, `gap_seconds`, and `count`.
+      properties:
+        segments:
+          type: array
+          description: Explicit list of segments to extract
+          items:
+            type: object
+            required: [start_seconds, duration_seconds]
+            properties:
+              start_seconds:
+                type: number
+                format: double
+                description: Start time of this segment
+              duration_seconds:
+                type: number
+                format: double
+                description: Duration of this segment (must be > 0)
+        start_seconds:
+          type: number
+          format: double
+          description: "(Uniform mode) Start time of the first clip"
+          default: 0
+        duration_seconds:
+          type: number
+          format: double
+          description: "(Uniform mode) Duration of each clip"
+          default: 4
+        gap_seconds:
+          type: number
+          format: double
+          description: "(Uniform mode) Gap between clips"
+          default: 0
+        count:
+          type: integer
+          description: "(Uniform mode) Number of clips to extract"
+          default: 3
+        output_prefix:
+          type: string
+          description: S3 prefix for individual clip files (derived from `output_key` if omitted)
+
+    # ── thumbnail ─────────────────────────────────────────────────
+
+    ThumbnailOptions:
+      type: object
+      properties:
+        at_second:
+          type: number
+          format: double
+          description: Timestamp to capture the frame at (in seconds)
+          default: 1
+          example: 3.5
+
+    # ── screenshots ───────────────────────────────────────────────
+
+    ScreenshotsOptions:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum: [count, timestamps, random]
+          default: count
+          description: |
+            - `count`: capture N frames, one per second from start
+            - `timestamps`: capture at explicit second values
+            - `random`: capture N frames at random positions
+        count:
+          type: integer
+          description: "Number of screenshots (used in `count` and `random` modes)"
+          default: 3
+          example: 5
+        timestamps:
+          type: array
+          items:
+            type: number
+            format: double
+          description: "Exact timestamps in seconds (used in `timestamps` mode)"
+          example: [1.5, 10, 30.2]
+        video_duration:
+          type: number
+          format: double
+          description: "Total video duration in seconds (required for `random` mode)"
+        output_prefix:
+          type: string
+          description: S3 prefix for individual screenshot files
+
+    # ── add_audio ─────────────────────────────────────────────────
+
+    AddAudioOptions:
+      type: object
+      required: [audio_key]
+      properties:
+        audio_key:
+          type: string
+          description: S3 key of the audio file to add
+          example: uploads/bgmusic.mp3
+        mix_mode:
+          type: string
+          enum: [replace, mix]
+          default: replace
+          description: |
+            - `replace`: remove original audio, use new audio only
+            - `mix`: overlay new audio on top of original track
+        volume:
+          type: number
+          format: double
+          default: 1.0
+          description: Volume multiplier for the new audio (e.g. 0.5 = 50%)
+          example: 0.5
+        audio_start_seconds:
+          type: number
+          format: double
+          default: 0
+          description: Trim the audio — start from this position in the audio file
+        video_offset_seconds:
+          type: number
+          format: double
+          default: 0
+          description: Delay the audio in the video timeline (seconds from video start)
+        audio_duration_seconds:
+          type: number
+          format: double
+          description: Max duration of audio to use (0 or omit = full length)
+          default: 0
+
+    # ── convert_format ────────────────────────────────────────────
+
+    ConvertFormatOptions:
+      type: object
+      required: [format]
+      properties:
+        format:
+          type: string
+          description: Target format / container
+          enum: [mp4, webm, mov, mkv]
+          example: webm
+
+    # ── convert_aspect_ratio ──────────────────────────────────────
+
+    ConvertAspectRatioOptions:
+      type: object
+      description: Provide `aspect_ratio` OR both `width` + `height`.
+      properties:
+        aspect_ratio:
+          type: string
+          description: Preset ratio string
+          example: "16:9"
+        width:
+          type: integer
+          description: Target width in pixels (use with `height`)
+          example: 1080
+        height:
+          type: integer
+          description: Target height in pixels (use with `width`)
+          example: 1920
+        fit_mode:
+          type: string
+          enum: [cover, contain]
+          default: cover
+          description: |
+            - `cover`: scale and crop to fill the frame (no black bars)
+            - `contain`: scale to fit inside the frame (may add black bars)
+
+    # ── create_thumbnail_with_text ────────────────────────────────
+
+    ThumbnailWithTextOptions:
+      type: object
+      description: At least one of `text` or `overlay_image_key` is required.
+      properties:
+        at_second:
+          type: number
+          format: double
+          default: 2
+          description: Timestamp to capture the background frame
+        text:
+          type: string
+          description: Text to overlay on the thumbnail
+          example: "Episode 1"
+        font:
+          type: string
+          description: Font family name
+        font_size:
+          type: integer
+          default: 46
+          description: Font size in pixels
+        font_color:
+          type: string
+          default: white
+          description: Font color (name or hex)
+        position:
+          type: string
+          enum: [top_left, top_center, top_right, center, bottom_left, bottom_center, bottom_right]
+          default: bottom_center
+          description: Text position on the image
+        effect:
+          type: string
+          enum: [shadow, outline, none]
+          default: shadow
+          description: Text effect
+        overlay_image_key:
+          type: string
+          description: S3 key of an image to overlay (e.g. a logo)
+        overlay_width:
+          type: integer
+          description: Width of the overlay image in pixels (0 = original)
+        overlay_height:
+          type: integer
+          description: Height of the overlay image in pixels (0 = original)
+        overlay_x:
+          type: string
+          description: "X position expression for the overlay (e.g. `\"10\"`, `\"W-w-10\"`)"
+        overlay_y:
+          type: string
+          description: "Y position expression for the overlay (e.g. `\"10\"`, `\"H-h-10\"`)"
+        overlay_opacity:
+          type: number
+          format: double
+          description: Overlay opacity (0.0 – 1.0)
+          default: 0
+
+    # ── image_sequence_video ──────────────────────────────────────
+
+    ImageSequenceOptions:
+      type: object
+      required: [segments]
+      properties:
+        segments:
+          type: array
+          minItems: 1
+          description: Ordered list of images and their display durations
+          items:
+            type: object
+            required: [image_key, duration_seconds]
+            properties:
+              image_key:
+                type: string
+                description: S3 key of the image
+                example: uploads/slide1.jpg
+              duration_seconds:
+                type: number
+                format: double
+                description: How long to display this image
+                example: 3
+        audio_key:
+          type: string
+          description: Optional S3 key for background audio
+
+    # ── ffmpeg_custom ─────────────────────────────────────────────
+
+    FfmpegCustomOptions:
+      type: object
+      description: |
+        Provide **either** `command` (a single string) **or** `args` (an array of strings).
+        Both must include `{input}` and `{output}` placeholders.
+      properties:
+        command:
+          type: string
+          description: FFmpeg command string with `{input}` and `{output}` placeholders
+          example: '-i {input} -vf "scale=640:480" -c:a copy {output}'
+        args:
+          type: array
+          items:
+            type: string
+          description: FFmpeg arguments as an array with `{input}` and `{output}` placeholders
+          example: ["-i", "{input}", "-vf", "scale=640:480", "-c:a", "copy", "{output}"]

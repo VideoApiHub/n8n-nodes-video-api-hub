@@ -13,7 +13,6 @@ import type { JsonObject } from 'n8n-workflow';
 import { fileDescription } from './descriptions/FileDescription';
 import { videoDescription } from './descriptions/VideoDescription';
 import { templateDescription } from './descriptions/TemplateDescription';
-import { accountDescription } from './descriptions/AccountDescription';
 import { jobDescription } from './descriptions/JobDescription';
 
 async function apiRequest(
@@ -65,7 +64,6 @@ export class VideoApiHub implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				options: [
-					{ name: 'Account', value: 'account' },
 					{ name: 'File', value: 'file' },
 					{ name: 'Job', value: 'job' },
 					{ name: 'Template', value: 'template' },
@@ -77,7 +75,6 @@ export class VideoApiHub implements INodeType {
 			...videoDescription,
 			...templateDescription,
 			...jobDescription,
-			...accountDescription,
 		],
 	};
 
@@ -101,9 +98,6 @@ export class VideoApiHub implements INodeType {
 					result = { json: responseData, pairedItem: { item: i } };
 				} else if (resource === 'job') {
 					result = await executeJob.call(this, operation, i);
-				} else if (resource === 'account') {
-					const responseData = await executeAccount.call(this, operation, i);
-					result = { json: responseData, pairedItem: { item: i } };
 				} else {
 					throw new NodeOperationError(this.getNode(), `Unknown resource: ${resource}`, {
 						itemIndex: i,
@@ -646,28 +640,4 @@ async function executeJob(
 	});
 }
 
-// ═══════════════════════════════════════════════════════════════
-// ACCOUNT
-// ═══════════════════════════════════════════════════════════════
 
-async function executeAccount(
-	this: IExecuteFunctions,
-	operation: string,
-	i: number,
-): Promise<IDataObject> {
-	if (operation === 'me') {
-		return apiRequest.call(this, 'GET', '/v1/me');
-	}
-
-	if (operation === 'healthCheck') {
-		return apiRequest.call(this, 'GET', '/health');
-	}
-
-	if (operation === 'viewPlans') {
-		return apiRequest.call(this, 'GET', '/v1/pricing');
-	}
-
-	throw new NodeOperationError(this.getNode(), `Unknown account operation: ${operation}`, {
-		itemIndex: i,
-	});
-}

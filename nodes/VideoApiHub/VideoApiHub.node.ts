@@ -64,11 +64,11 @@ export class VideoApiHub implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				options: [
-					{ name: 'Video', value: 'video' },
-					{ name: 'Template', value: 'template' },
+					{ name: 'Account', value: 'account' },
 					{ name: 'File', value: 'file' },
 					{ name: 'Job', value: 'job' },
-					{ name: 'Account', value: 'account' },
+					{ name: 'Template', value: 'template' },
+					{ name: 'Video', value: 'video' },
 				],
 				default: 'video',
 			},
@@ -94,15 +94,15 @@ export class VideoApiHub implements INodeType {
 					result = await executeFile.call(this, operation, i);
 				} else if (resource === 'video') {
 					const responseData = await executeVideo.call(this, operation, i);
-					result = { json: responseData };
+					result = { json: responseData, pairedItem: { item: i } };
 				} else if (resource === 'template') {
 					const responseData = await executeTemplate.call(this, operation, i);
-					result = { json: responseData };
+					result = { json: responseData, pairedItem: { item: i } };
 				} else if (resource === 'job') {
 					result = await executeJob.call(this, operation, i);
 				} else if (resource === 'account') {
 					const responseData = await executeAccount.call(this, operation, i);
-					result = { json: responseData };
+					result = { json: responseData, pairedItem: { item: i } };
 				} else {
 					throw new NodeOperationError(this.getNode(), `Unknown resource: ${resource}`, {
 						itemIndex: i,
@@ -117,8 +117,11 @@ export class VideoApiHub implements INodeType {
 						pairedItem: { item: i },
 					});
 				} else {
-					if ((error as NodeOperationError).context) {
-						(error as NodeOperationError).context.itemIndex = i;
+					if (error instanceof NodeOperationError) {
+						error.context = {
+							...error.context,
+							itemIndex: i,
+						};
 						throw error;
 					}
 					throw new NodeOperationError(this.getNode(), error as Error, { itemIndex: i });

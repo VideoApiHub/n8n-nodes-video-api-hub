@@ -10,6 +10,11 @@ export class VideoApiHubApi implements ICredentialType {
 
 	displayName = 'Video Api Hub API';
 
+	icon = {
+		light: 'file:videoApiHub.svg',
+		dark: 'file:videoApiHub.dark.svg',
+	} as const;
+
 	documentationUrl = 'https://videoapihub.com/docs';
 
 	properties: INodeProperties[] = [

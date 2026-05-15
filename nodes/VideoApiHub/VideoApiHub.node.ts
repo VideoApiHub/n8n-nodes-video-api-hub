@@ -11,9 +11,13 @@ import type {
 import { NodeConnectionTypes, NodeApiError, NodeOperationError } from 'n8n-workflow';
 
 /* eslint-disable @n8n/community-nodes/options-sorted-alphabetically */
+/* eslint-disable n8n-nodes-base/node-param-options-type-unsorted-items */
 
 import { fileDescription } from './descriptions/FileDescription';
-import { videoDescription } from './descriptions/VideoDescription';
+import { videoCreateDescription } from './descriptions/VideoCreateDescription';
+import { videoEditDescription } from './descriptions/VideoEditDescription';
+import { videoAudioDescription } from './descriptions/VideoAudioDescription';
+import { videoImageDescription } from './descriptions/VideoImageDescription';
 import { templateDescription } from './descriptions/TemplateDescription';
 import { jobDescription } from './descriptions/JobDescription';
 
@@ -67,14 +71,20 @@ export class VideoApiHub implements INodeType {
 				noDataExpression: true,
 				options: [
 					{ name: 'Template', value: 'template' },
-					{ name: 'Video', value: 'video' },
+					{ name: 'Create Video', value: 'videoCreate' },
+					{ name: 'Edit Video', value: 'videoEdit' },
+					{ name: 'Video Audio', value: 'videoAudio' },
+					{ name: 'Video Thumbnail', value: 'videoImage' },
 					{ name: 'Job', value: 'job' },
 					{ name: 'File', value: 'file' },
 				],
-				default: 'video',
+				default: 'videoCreate',
 			},
 			...templateDescription,
-			...videoDescription,
+			...videoCreateDescription,
+			...videoEditDescription,
+			...videoAudioDescription,
+			...videoImageDescription,
 			...jobDescription,
 			...fileDescription,
 		],
@@ -93,7 +103,7 @@ export class VideoApiHub implements INodeType {
 				if (resource === 'template') {
 					const responseData = await executeTemplate.call(this, operation, i);
 					result = { json: responseData, pairedItem: { item: i } };
-				} else if (resource === 'video') {
+				} else if (resource === 'videoCreate' || resource === 'videoEdit' || resource === 'videoAudio' || resource === 'videoImage') {
 					const responseData = await executeVideo.call(this, operation, i);
 					result = { json: responseData, pairedItem: { item: i } };
 				} else if (resource === 'job') {
@@ -224,12 +234,11 @@ async function executeVideo(
 	operation: string,
 	i: number,
 ): Promise<IDataObject> {
-	const imageOps = ['thumbnail', 'thumbnailWithText', 'screenshots'];
-	const audioOps = ['extractAudio'];
+	const resource = this.getNodeParameter('resource', i) as string;
 	let outputFormat: string;
-	if (imageOps.includes(operation)) {
+	if (resource === 'videoImage') {
 		outputFormat = this.getNodeParameter('imageFormat', i) as string;
-	} else if (audioOps.includes(operation)) {
+	} else if (resource === 'videoAudio' && operation === 'extractAudio') {
 		outputFormat = this.getNodeParameter('audioFormat', i) as string;
 	} else {
 		outputFormat = this.getNodeParameter('outputFormat', i) as string;

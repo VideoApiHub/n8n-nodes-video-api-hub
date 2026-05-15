@@ -243,7 +243,6 @@ async function executeVideo(
 	} else {
 		outputFormat = this.getNodeParameter('outputFormat', i) as string;
 	}
-	const outputOpts = this.getNodeParameter('outputOptions', i, {}) as IDataObject;
 
 	const needsInput = [
 		'clip',
@@ -265,9 +264,17 @@ async function executeVideo(
 	// Build common request body
 	const baseBody: IDataObject = { output_format: outputFormat };
 	if (input) baseBody.input = input;
+
+	const outputType = this.getNodeParameter('outputType', i) as string;
+	baseBody.output_type = outputType;
+
+	if (outputType === 'signed_url') {
+		const outputExpiry = this.getNodeParameter('outputExpiry', i, 3600) as number;
+		baseBody.output_expiry = outputExpiry;
+	}
+
+	const outputOpts = this.getNodeParameter('outputOptions', i, {}) as IDataObject;
 	if (outputOpts.outputKey) baseBody.output_key = outputOpts.outputKey;
-	if (outputOpts.outputType) baseBody.output_type = outputOpts.outputType;
-	if (outputOpts.outputExpiry) baseBody.output_expiry = outputOpts.outputExpiry;
 
 	// ── Clip ──────────────────────────────────────────────────
 	if (operation === 'clip') {
@@ -620,8 +627,9 @@ async function executeJob(
 		let query = '';
 		if (responseType === 'url') query = '?response=url';
 		else if (responseType === 'file') query = '?response=file';
+		else if (responseType === 'public_url') query = '?response=url';
 
-		if (responseType === 'url') {
+		if (responseType === 'url' || responseType === 'public_url') {
 			// URL mode — always returns JSON
 			const responseData = await apiRequest.call(
 				this,

@@ -77,6 +77,31 @@ export const videoAudioDescription: INodeProperties[] = [
 		description: 'Choose the format for the extracted audio',
 	},
 
+	// ── How to Get the Result ─────────────────────────────────
+	{
+		displayName: 'How to Get the Result',
+		name: 'outputType',
+		type: 'options',
+		displayOptions: { show: { ...showFor, operation: allOps } },
+		options: [
+			{ name: 'File (Default)', value: 'file', description: 'Download the file directly when the job completes' },
+			{ name: 'Download Link', value: 'signed_url', description: 'Get a temporary download link that expires' },
+			{ name: 'Public URL', value: 'public_url', description: 'Get a permanent public link — no authentication needed' },
+			{ name: 'Save to Storage Only', value: 'stored', description: 'Just save it — no download link' },
+		],
+		default: 'file',
+		description: 'How you want to receive the finished result',
+	},
+	{
+		displayName: 'Link Expires After (Seconds)',
+		name: 'outputExpiry',
+		type: 'number',
+		displayOptions: { show: { ...showFor, operation: allOps, outputType: ['signed_url'] } },
+		typeOptions: { minValue: 60, maxValue: 86400 },
+		default: 3600,
+		description: 'How long the download link stays active. Default: 1 hour (3600 seconds).',
+	},
+
 	// ── Advanced Settings ────────────────────────────────────
 	{
 		displayName: 'Advanced Settings',
@@ -86,26 +111,6 @@ export const videoAudioDescription: INodeProperties[] = [
 		displayOptions: { show: { ...showFor, operation: allOps } },
 		default: {},
 		options: [
-			{
-				displayName: 'How to Get the Result',
-				name: 'outputType',
-				type: 'options',
-				options: [
-					{ name: 'Download Link (Default)', value: 'signed_url', description: 'Get a temporary download link' },
-					{ name: 'Direct File Download', value: 'file', description: 'Download the file directly' },
-					{ name: 'Save to Storage Only', value: 'stored', description: 'Just save it — no download link' },
-				],
-				default: 'signed_url',
-				description: 'How you want to receive the finished result',
-			},
-			{
-				displayName: 'Link Expires After (Seconds)',
-				name: 'outputExpiry',
-				type: 'number',
-				typeOptions: { minValue: 60, maxValue: 86400 },
-				default: 3600,
-				description: 'How long the download link stays active. Default: 1 hour.',
-			},
 			{
 				displayName: 'Custom Save Path',
 				name: 'outputKey',

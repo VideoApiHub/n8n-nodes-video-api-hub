@@ -10,6 +10,8 @@ import type {
 import { NodeConnectionTypes, NodeApiError, NodeOperationError } from 'n8n-workflow';
 import type { JsonObject } from 'n8n-workflow';
 
+/* eslint-disable @n8n/community-nodes/options-sorted-alphabetically */
+
 import { fileDescription } from './descriptions/FileDescription';
 import { videoDescription } from './descriptions/VideoDescription';
 import { templateDescription } from './descriptions/TemplateDescription';
@@ -64,17 +66,17 @@ export class VideoApiHub implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				options: [
-					{ name: 'File', value: 'file' },
-					{ name: 'Job', value: 'job' },
 					{ name: 'Template', value: 'template' },
 					{ name: 'Video', value: 'video' },
+					{ name: 'Job', value: 'job' },
+					{ name: 'File', value: 'file' },
 				],
 				default: 'video',
 			},
-			...fileDescription,
-			...videoDescription,
 			...templateDescription,
+			...videoDescription,
 			...jobDescription,
+			...fileDescription,
 		],
 	};
 
@@ -88,16 +90,16 @@ export class VideoApiHub implements INodeType {
 				const operation = this.getNodeParameter('operation', i) as string;
 				let result: INodeExecutionData;
 
-				if (resource === 'file') {
-					result = await executeFile.call(this, operation, i);
+				if (resource === 'template') {
+					const responseData = await executeTemplate.call(this, operation, i);
+					result = { json: responseData, pairedItem: { item: i } };
 				} else if (resource === 'video') {
 					const responseData = await executeVideo.call(this, operation, i);
 					result = { json: responseData, pairedItem: { item: i } };
-				} else if (resource === 'template') {
-					const responseData = await executeTemplate.call(this, operation, i);
-					result = { json: responseData, pairedItem: { item: i } };
 				} else if (resource === 'job') {
 					result = await executeJob.call(this, operation, i);
+				} else if (resource === 'file') {
+					result = await executeFile.call(this, operation, i);
 				} else {
 					throw new NodeOperationError(this.getNode(), `Unknown resource: ${resource}`, {
 						itemIndex: i,

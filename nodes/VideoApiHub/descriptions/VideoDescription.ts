@@ -37,94 +37,95 @@ export const videoDescription: INodeProperties[] = [
 		noDataExpression: true,
 		displayOptions: { show: showForVideo },
 		options: [
-			// ── Create ──────────────────────────────
+			// ─── Create ─────────────────────────────
 			{
-				name: 'Create from Design',
+				name: 'Create Video from Design',
 				value: 'createFromDesign',
 				action: 'Create a video from a design',
 				description: 'Build a video with text, images, shapes, and animations',
 			},
 			{
-				name: 'Create Slideshow',
+				name: 'Create Slideshow from Images',
 				value: 'slideshow',
-				action: 'Create a video from images',
+				action: 'Create a slideshow from images',
 				description: 'Turn a series of images into a video with optional music',
 			},
 			{
-				name: 'Merge Videos',
+				name: 'Merge Multiple Videos',
 				value: 'merge',
 				action: 'Merge multiple videos into one',
-				description: 'Join multiple videos into one, played one after another',
+				description: 'Join several videos together, played one after another',
 			},
-			// ── Edit ────────────────────────────────
+			// ─── Cut & Trim ─────────────────────────
 			{
-				name: 'Clip',
+				name: 'Clip Video',
 				value: 'clip',
-				action: 'Cut a section from a video',
-				description: 'Extract a specific time range from your video',
+				action: 'Clip a section from a video',
+				description: 'Cut out a specific time range from your video',
 			},
 			{
-				name: 'Extract Multiple Clips',
+				name: 'Clip Multiple Sections',
 				value: 'multiClip',
-				action: 'Cut multiple sections from a video',
-				description: 'Extract several time ranges from your video at once',
+				action: 'Clip multiple sections from a video',
+				description: 'Cut out several time ranges from your video at once',
 			},
+			// ─── Transform ──────────────────────────
 			{
-				name: 'Resize',
+				name: 'Resize / Change Aspect Ratio',
 				value: 'resize',
 				action: 'Resize a video',
-				description: 'Change the dimensions or aspect ratio of your video',
+				description: 'Change the size or aspect ratio (e.g. landscape to portrait)',
 			},
 			{
 				name: 'Convert Format',
 				value: 'convertFormat',
-				action: 'Convert a video to another format',
-				description: 'Change the file format of your video',
+				action: 'Convert video format',
+				description: 'Convert between MP4, MOV, WebM, and MKV',
 			},
-			// ── Audio ───────────────────────────────
+			// ─── Audio ──────────────────────────────
 			{
-				name: 'Add Audio',
+				name: 'Add Audio to Video',
 				value: 'addAudio',
 				action: 'Add audio to a video',
-				description: 'Add background music or replace the existing audio',
+				description: 'Add background music or replace the existing audio track',
 			},
 			{
-				name: 'Remove Audio',
+				name: 'Remove Audio from Video',
 				value: 'removeAudio',
 				action: 'Remove audio from a video',
-				description: 'Remove all sound from your video',
+				description: 'Strip all sound from your video',
 			},
 			{
-				name: 'Extract Audio',
+				name: 'Extract Audio from Video',
 				value: 'extractAudio',
 				action: 'Extract audio from a video',
-				description: 'Extract just the audio track from your video',
+				description: 'Save just the audio track as MP3, WAV, or AAC',
 			},
-			// ── Thumbnails ──────────────────────────
+			// ─── Images & Thumbnails ────────────────
 			{
-				name: 'Get Thumbnail',
+				name: 'Capture Thumbnail',
 				value: 'thumbnail',
-				action: 'Capture a frame as an image',
-				description: 'Capture a single frame from your video as an image',
+				action: 'Capture a thumbnail from a video',
+				description: 'Grab a single frame from your video as an image',
 			},
 			{
-				name: 'Thumbnail with Text',
+				name: 'Capture Thumbnail with Text',
 				value: 'thumbnailWithText',
-				action: 'Create a thumbnail with text overlay',
-				description: 'Capture a frame and add text or a logo on top',
+				action: 'Capture a thumbnail with text overlay',
+				description: 'Grab a frame and add text or a logo on top',
 			},
 			{
-				name: 'Take Screenshots',
+				name: 'Capture Screenshots',
 				value: 'screenshots',
-				action: 'Capture multiple frames as images',
-				description: 'Capture several frames from your video as images',
+				action: 'Capture screenshots from a video',
+				description: 'Grab multiple frames from your video as images',
 			},
-			// ── Advanced ────────────────────────────
+			// ─── Advanced ───────────────────────────
 			{
-				name: 'Run Custom Command',
+				name: 'Run Custom FFmpeg Command',
 				value: 'customCommand',
-				action: 'Run a custom video command',
-				description: 'Run a custom FFmpeg command for advanced processing',
+				action: 'Run a custom ffmpeg command',
+				description: 'Run your own FFmpeg command for advanced processing',
 			},
 		],
 		default: 'createFromDesign',

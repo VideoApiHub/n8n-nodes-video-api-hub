@@ -31,14 +31,14 @@ export const templateDescription: INodeProperties[] = [
 		description: 'The ID of the template to use',
 	},
 	{
-		displayName: 'Save Result As',
+		displayName: 'Output File Name',
 		name: 'templateOutputKey',
 		type: 'string',
 		required: true,
 		displayOptions: { show: { ...showForTemplate, operation: ['render'] } },
 		default: 'default.mp4',
-		placeholder: 'my-video.mp4',
-		description: 'File name for the rendered video (e.g. promo.mp4)',
+		placeholder: 'my-promo-video.mp4',
+		description: 'Name for the output video file',
 	},
 	{
 		displayName: 'Variables',

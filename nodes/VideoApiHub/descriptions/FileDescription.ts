@@ -28,13 +28,13 @@ export const fileDescription: INodeProperties[] = [
 
 	// ── Upload File ──────────────────────────────────────────
 	{
-		displayName: 'File Field',
+		displayName: 'Input Data Field',
 		name: 'binaryPropertyName',
 		type: 'string',
 		required: true,
 		displayOptions: { show: { ...showForFile, operation: ['uploadFile'] } },
 		default: 'data',
-		description: 'Name of the binary property containing the file to upload. Use a previous node (e.g. Read File, HTTP Request) to load the file.',
+		description: 'Name of the field containing your file from a previous step. The default "data" works in most cases.',
 	},
 
 	// ── Download File ────────────────────────────────────────

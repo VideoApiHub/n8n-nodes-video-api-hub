@@ -22,7 +22,11 @@ const opsWithInput = [
 	'customCommand',
 ];
 
-const allVideoOps = [...opsWithInput, 'slideshow', 'createFromDesign'];
+const allVideoOps = [...opsWithInput, 'merge', 'slideshow', 'createFromDesign'];
+
+const videoFormatOps = ['clip', 'multiClip', 'merge', 'removeAudio', 'addAudio', 'convertFormat', 'resize', 'slideshow', 'createFromDesign', 'customCommand'];
+const imageFormatOps = ['thumbnail', 'thumbnailWithText', 'screenshots'];
+const audioFormatOps = ['extractAudio'];
 
 export const videoDescription: INodeProperties[] = [
 	// ── Operation selector ───────────────────────────────────
@@ -38,13 +42,19 @@ export const videoDescription: INodeProperties[] = [
 				name: 'Create from Design',
 				value: 'createFromDesign',
 				action: 'Create a video from a design',
-				description: 'Build a video from a JSON design with text, images, and shapes',
+				description: 'Build a video with text, images, shapes, and animations',
 			},
 			{
 				name: 'Create Slideshow',
 				value: 'slideshow',
 				action: 'Create a video from images',
 				description: 'Turn a series of images into a video with optional music',
+			},
+			{
+				name: 'Merge Videos',
+				value: 'merge',
+				action: 'Merge multiple videos into one',
+				description: 'Join multiple videos into one, played one after another',
 			},
 			// ── Edit ────────────────────────────────
 			{
@@ -82,20 +92,20 @@ export const videoDescription: INodeProperties[] = [
 				name: 'Remove Audio',
 				value: 'removeAudio',
 				action: 'Remove audio from a video',
-				description: 'Remove the sound track from your video',
+				description: 'Remove all sound from your video',
 			},
 			{
 				name: 'Extract Audio',
 				value: 'extractAudio',
 				action: 'Extract audio from a video',
-				description: 'Save the audio track from your video as an MP3 file',
+				description: 'Extract just the audio track from your video',
 			},
 			// ── Thumbnails ──────────────────────────
 			{
 				name: 'Get Thumbnail',
 				value: 'thumbnail',
 				action: 'Capture a frame as an image',
-				description: 'Save a single frame from your video as a JPEG image',
+				description: 'Capture a single frame from your video as an image',
 			},
 			{
 				name: 'Thumbnail with Text',
@@ -107,7 +117,7 @@ export const videoDescription: INodeProperties[] = [
 				name: 'Take Screenshots',
 				value: 'screenshots',
 				action: 'Capture multiple frames as images',
-				description: 'Save multiple frames from your video as JPEG images',
+				description: 'Capture several frames from your video as images',
 			},
 			// ── Advanced ────────────────────────────
 			{
@@ -120,28 +130,95 @@ export const videoDescription: INodeProperties[] = [
 		default: 'createFromDesign',
 	},
 
-	// ── Shared: Source File ──────────────────────────────────
+	// ── Shared: Video Source ─────────────────────────────────
 	{
-		displayName: 'Source File',
-		name: 'inputKey',
+		displayName: 'Video Source',
+		name: 'input',
 		type: 'string',
 		required: true,
 		displayOptions: { show: { ...showForVideo, operation: opsWithInput } },
 		default: '',
-		placeholder: 'uploads/my-video.mp4',
-		description: 'Path to your file in Video Api Hub storage',
+		placeholder: 'https://example.com/my-video.mp4',
+		description: 'Paste a link to your video, or enter a file path from your storage',
 	},
 
-	// ── Shared: Save Result As ───────────────────────────────
+	// ── Shared: Output Format ────────────────────────────────
 	{
-		displayName: 'Save Result As',
-		name: 'outputKey',
-		type: 'string',
-		required: true,
+		displayName: 'Output Format',
+		name: 'outputFormat',
+		type: 'options',
+		displayOptions: { show: { ...showForVideo, operation: videoFormatOps } },
+		options: [
+			{ name: 'MP4 (Recommended)', value: 'mp4' },
+			{ name: 'MOV', value: 'mov' },
+			{ name: 'WebM', value: 'webm' },
+			{ name: 'MKV', value: 'mkv' },
+		],
+		default: 'mp4',
+		description: 'Choose the format for your output video',
+	},
+	{
+		displayName: 'Image Format',
+		name: 'imageFormat',
+		type: 'options',
+		displayOptions: { show: { ...showForVideo, operation: imageFormatOps } },
+		options: [
+			{ name: 'JPG (Recommended)', value: 'jpg' },
+			{ name: 'PNG (Higher Quality)', value: 'png' },
+		],
+		default: 'jpg',
+		description: 'Choose the image format for the output',
+	},
+	{
+		displayName: 'Audio Format',
+		name: 'audioFormat',
+		type: 'options',
+		displayOptions: { show: { ...showForVideo, operation: audioFormatOps } },
+		options: [
+			{ name: 'MP3 (Recommended)', value: 'mp3' },
+			{ name: 'WAV (Uncompressed)', value: 'wav' },
+			{ name: 'AAC', value: 'aac' },
+		],
+		default: 'mp3',
+		description: 'Choose the format for the extracted audio',
+	},
+	{
+		displayName: 'Advanced Settings',
+		name: 'outputOptions',
+		type: 'collection',
+		placeholder: 'Add Setting',
 		displayOptions: { show: { ...showForVideo, operation: allVideoOps } },
-		default: 'default.mp4',
-		placeholder: 'my-video.mp4',
-		description: 'File name for the result (e.g. my-clip.mp4)',
+		default: {},
+		options: [
+			{
+				displayName: 'How to Get the Result',
+				name: 'outputType',
+				type: 'options',
+				options: [
+					{ name: 'Download Link (Default)', value: 'signed_url', description: 'Get a temporary download link' },
+					{ name: 'Direct File Download', value: 'file', description: 'Download the file directly' },
+					{ name: 'Save to Storage Only', value: 'stored', description: 'Just save it — no download link' },
+				],
+				default: 'signed_url',
+				description: 'How you want to receive the finished result',
+			},
+			{
+				displayName: 'Link Expires After (Seconds)',
+				name: 'outputExpiry',
+				type: 'number',
+				typeOptions: { minValue: 60, maxValue: 86400 },
+				default: 3600,
+				description: 'How long the download link stays active. Default: 1 hour.',
+			},
+			{
+				displayName: 'Custom Save Path',
+				name: 'outputKey',
+				type: 'string',
+				default: '',
+				placeholder: 'my-folder/result.mp4',
+				description: 'Where to save the result in your storage. Leave empty to auto-generate.',
+			},
+		],
 	},
 
 	// ═══════════════════════════════════════════════════════════
@@ -272,6 +349,39 @@ export const videoDescription: INodeProperties[] = [
 	},
 
 	// ═══════════════════════════════════════════════════════════
+	// MERGE
+	// ═══════════════════════════════════════════════════════════
+	{
+		displayName: 'Videos to Merge',
+		name: 'videoKeys',
+		type: 'fixedCollection',
+		typeOptions: {
+			multipleValues: true,
+			multipleValueButtonText: 'Add Video',
+		},
+		required: true,
+		displayOptions: { show: { ...showForVideo, operation: ['merge'] } },
+		default: {},
+		options: [
+			{
+				name: 'videoValues',
+				displayName: 'Video',
+				values: [
+					{
+						displayName: 'Video Source',
+						name: 'source',
+						type: 'string',
+						default: '',
+						placeholder: 'https://example.com/intro.mp4',
+						description: 'Link to the video, or a file path from your storage',
+					},
+				],
+			},
+		],
+		description: 'Videos to concatenate in order',
+	},
+
+	// ═══════════════════════════════════════════════════════════
 	// THUMBNAIL
 	// ═══════════════════════════════════════════════════════════
 	{
@@ -359,8 +469,8 @@ export const videoDescription: INodeProperties[] = [
 		required: true,
 		displayOptions: { show: { ...showForVideo, operation: ['addAudio'] } },
 		default: '',
-		placeholder: 'uploads/background-music.mp3',
-		description: 'Path to the audio file in your storage',
+		placeholder: 'https://example.com/music.mp3',
+		description: 'Link to the audio file, or a file path from your storage',
 	},
 	{
 		displayName: 'Audio Mode',
@@ -425,25 +535,6 @@ export const videoDescription: INodeProperties[] = [
 	},
 
 	// ═══════════════════════════════════════════════════════════
-	// CONVERT FORMAT
-	// ═══════════════════════════════════════════════════════════
-	{
-		displayName: 'Target Format',
-		name: 'targetFormat',
-		type: 'options',
-		required: true,
-		displayOptions: { show: { ...showForVideo, operation: ['convertFormat'] } },
-		options: [
-			{ name: 'MP4', value: 'mp4' },
-			{ name: 'WebM', value: 'webm' },
-			{ name: 'MOV', value: 'mov' },
-			{ name: 'MKV', value: 'mkv' },
-		],
-		default: 'mp4',
-		description: 'The format to convert your video to',
-	},
-
-	// ═══════════════════════════════════════════════════════════
 	// RESIZE
 	// ═══════════════════════════════════════════════════════════
 	{
@@ -473,14 +564,14 @@ export const videoDescription: INodeProperties[] = [
 			show: { ...showForVideo, operation: ['resize'], sizeMode: ['preset'] },
 		},
 		options: [
-			{ name: '16:9 (Landscape / YouTube)', value: '16:9' },
-			{ name: '9:16 (Portrait / Reels / TikTok)', value: '9:16' },
-			{ name: '1:1 (Square / Instagram)', value: '1:1' },
-			{ name: '4:3 (Classic)', value: '4:3' },
-			{ name: '4:5 (Portrait / Facebook)', value: '4:5' },
-			{ name: '21:9 (Ultra-wide)', value: '21:9' },
+			{ name: '16:9 (Landscape / YouTube)', value: 'landscape_16_9' },
+			{ name: '9:16 (Portrait / Reels / TikTok)', value: 'mobile_9_16' },
+			{ name: '1:1 (Square / Instagram)', value: 'square_1_1' },
+			{ name: '4:3 (Classic)', value: 'standard_4_3' },
+			{ name: '4:5 (Portrait / Facebook)', value: 'portrait_4_5' },
+			{ name: '21:9 (Ultra-wide)', value: 'ultrawide_21_9' },
 		],
-		default: '16:9',
+		default: 'landscape_16_9',
 		description: 'The shape to resize your video to',
 	},
 	{
@@ -520,6 +611,11 @@ export const videoDescription: INodeProperties[] = [
 				name: 'Fit Inside (May Add Bars)',
 				value: 'contain',
 				description: 'Scale to fit inside the frame, adding black bars if needed',
+			},
+			{
+				name: 'Stretch to Fill',
+				value: 'stretch',
+				description: 'Stretch the video to fill the frame exactly',
 			},
 		],
 		default: 'cover',
@@ -572,6 +668,14 @@ export const videoDescription: INodeProperties[] = [
 		default: {},
 		options: [
 			{
+				displayName: 'Font',
+				name: 'font',
+				type: 'string',
+				default: '',
+				placeholder: 'Arial',
+				description: 'Font name to use for the text',
+			},
+			{
 				displayName: 'Font Size',
 				name: 'fontSize',
 				type: 'number',
@@ -592,6 +696,7 @@ export const videoDescription: INodeProperties[] = [
 				type: 'options',
 				options: [
 					{ name: 'Shadow', value: 'shadow' },
+					{ name: 'Box', value: 'box' },
 					{ name: 'Outline', value: 'outline' },
 					{ name: 'None', value: 'none' },
 				],
@@ -603,8 +708,8 @@ export const videoDescription: INodeProperties[] = [
 				name: 'overlayImageKey',
 				type: 'string',
 				default: '',
-				placeholder: 'uploads/logo.png',
-				description: 'Path to an image (like a logo) to place on the thumbnail',
+				placeholder: 'https://example.com/logo.png',
+				description: 'Link to an image (like a logo) to place on the thumbnail',
 			},
 			{
 				displayName: 'Overlay Width (Pixels)',
@@ -647,8 +752,8 @@ export const videoDescription: INodeProperties[] = [
 						name: 'imageKey',
 						type: 'string',
 						default: '',
-						placeholder: 'uploads/slide1.jpg',
-						description: 'Path to the image in your storage',
+						placeholder: 'https://example.com/slide1.jpg',
+						description: 'Link to the image, or a file path from your storage',
 					},
 					{
 						displayName: 'Show For (Seconds)',
@@ -669,8 +774,8 @@ export const videoDescription: INodeProperties[] = [
 		type: 'string',
 		displayOptions: { show: { ...showForVideo, operation: ['slideshow'] } },
 		default: '',
-		placeholder: 'uploads/music.mp3',
-		description: 'Path to an audio file to play in the background (optional)',
+		placeholder: 'https://example.com/music.mp3',
+		description: 'Link to an audio file for background music (optional)',
 	},
 
 	// ═══════════════════════════════════════════════════════════

@@ -225,8 +225,17 @@ async function executeVideo(
 	operation: string,
 	i: number,
 ): Promise<IDataObject> {
-	const rawOutputKey = this.getNodeParameter('outputKey', i) as string;
-	const outputKey = rawOutputKey.startsWith('outputs/') ? rawOutputKey : `outputs/${rawOutputKey}`;
+	const imageOps = ['thumbnail', 'thumbnailWithText', 'screenshots'];
+	const audioOps = ['extractAudio'];
+	let outputFormat: string;
+	if (imageOps.includes(operation)) {
+		outputFormat = this.getNodeParameter('imageFormat', i) as string;
+	} else if (audioOps.includes(operation)) {
+		outputFormat = this.getNodeParameter('audioFormat', i) as string;
+	} else {
+		outputFormat = this.getNodeParameter('outputFormat', i) as string;
+	}
+	const outputOpts = this.getNodeParameter('outputOptions', i, {}) as IDataObject;
 
 	const needsInput = [
 		'clip',
@@ -241,15 +250,21 @@ async function executeVideo(
 		'thumbnailWithText',
 		'customCommand',
 	];
-	const inputKey = needsInput.includes(operation)
-		? (this.getNodeParameter('inputKey', i) as string)
+	const input = needsInput.includes(operation)
+		? (this.getNodeParameter('input', i) as string)
 		: undefined;
+
+	// Build common request body
+	const baseBody: IDataObject = { output_format: outputFormat };
+	if (input) baseBody.input = input;
+	if (outputOpts.outputKey) baseBody.output_key = outputOpts.outputKey;
+	if (outputOpts.outputType) baseBody.output_type = outputOpts.outputType;
+	if (outputOpts.outputExpiry) baseBody.output_expiry = outputOpts.outputExpiry;
 
 	// ── Clip ──────────────────────────────────────────────────
 	if (operation === 'clip') {
 		return apiRequest.call(this, 'POST', '/v1/video/clip', {
-			input_key: inputKey,
-			output_key: outputKey,
+			...baseBody,
 			options: {
 				start_seconds: this.getNodeParameter('startSeconds', i) as number,
 				duration_seconds: this.getNodeParameter('durationSeconds', i) as number,
@@ -278,17 +293,27 @@ async function executeVideo(
 		}
 
 		return apiRequest.call(this, 'POST', '/v1/video/multi-clip', {
-			input_key: inputKey,
-			output_key: outputKey,
+			...baseBody,
 			options,
+		} as IDataObject);
+	}
+
+	// ── Merge ─────────────────────────────────────────────────
+	if (operation === 'merge') {
+		const videoKeysData = this.getNodeParameter('videoKeys', i) as {
+			videoValues?: Array<{ source: string }>;
+		};
+		const videoKeys = (videoKeysData.videoValues ?? []).map((v) => v.source);
+		return apiRequest.call(this, 'POST', '/v1/video/merge', {
+			...baseBody,
+			options: { video_keys: videoKeys },
 		} as IDataObject);
 	}
 
 	// ── Thumbnail ────────────────────────────────────────────
 	if (operation === 'thumbnail') {
 		return apiRequest.call(this, 'POST', '/v1/video/thumbnail', {
-			input_key: inputKey,
-			output_key: outputKey,
+			...baseBody,
 			options: {
 				at_second: this.getNodeParameter('atSecond', i) as number,
 			},
@@ -314,8 +339,7 @@ async function executeVideo(
 		}
 
 		return apiRequest.call(this, 'POST', '/v1/video/screenshots', {
-			input_key: inputKey,
-			output_key: outputKey,
+			...baseBody,
 			options,
 		} as IDataObject);
 	}
@@ -323,16 +347,14 @@ async function executeVideo(
 	// ── Remove Audio ─────────────────────────────────────────
 	if (operation === 'removeAudio') {
 		return apiRequest.call(this, 'POST', '/v1/video/remove-audio', {
-			input_key: inputKey,
-			output_key: outputKey,
+			...baseBody,
 		} as IDataObject);
 	}
 
 	// ── Extract Audio ────────────────────────────────────────
 	if (operation === 'extractAudio') {
 		return apiRequest.call(this, 'POST', '/v1/video/extract-audio', {
-			input_key: inputKey,
-			output_key: outputKey,
+			...baseBody,
 		} as IDataObject);
 	}
 
@@ -352,8 +374,7 @@ async function executeVideo(
 			options.audio_duration_seconds = extra.audioDurationSeconds;
 
 		return apiRequest.call(this, 'POST', '/v1/video/add-audio', {
-			input_key: inputKey,
-			output_key: outputKey,
+			...baseBody,
 			options,
 		} as IDataObject);
 	}
@@ -361,10 +382,9 @@ async function executeVideo(
 	// ── Convert Format ───────────────────────────────────────
 	if (operation === 'convertFormat') {
 		return apiRequest.call(this, 'POST', '/v1/video/convert-format', {
-			input_key: inputKey,
-			output_key: outputKey,
+			...baseBody,
 			options: {
-				format: this.getNodeParameter('targetFormat', i) as string,
+				format: outputFormat,
 			},
 		} as IDataObject);
 	}
@@ -383,8 +403,7 @@ async function executeVideo(
 		options.fit_mode = this.getNodeParameter('fitMode', i) as string;
 
 		return apiRequest.call(this, 'POST', '/v1/video/convert-aspect-ratio', {
-			input_key: inputKey,
-			output_key: outputKey,
+			...baseBody,
 			options,
 		} as IDataObject);
 	}
@@ -400,6 +419,7 @@ async function executeVideo(
 		options.position = this.getNodeParameter('textPosition', i) as string;
 
 		const extra = this.getNodeParameter('thumbnailTextOptions', i, {}) as IDataObject;
+		if (extra.font !== undefined) options.font = extra.font;
 		if (extra.fontSize !== undefined) options.font_size = extra.fontSize;
 		if (extra.fontColor !== undefined) options.font_color = extra.fontColor;
 		if (extra.effect !== undefined) options.effect = extra.effect;
@@ -408,8 +428,7 @@ async function executeVideo(
 		if (extra.overlayHeight !== undefined) options.overlay_height = extra.overlayHeight;
 
 		return apiRequest.call(this, 'POST', '/v1/video/thumbnail-with-text', {
-			input_key: inputKey,
-			output_key: outputKey,
+			...baseBody,
 			options,
 		} as IDataObject);
 	}
@@ -429,7 +448,7 @@ async function executeVideo(
 		if (audioKey) options.audio_key = audioKey;
 
 		return apiRequest.call(this, 'POST', '/v1/video/image-sequence', {
-			output_key: outputKey,
+			...baseBody,
 			options,
 		} as IDataObject);
 	}
@@ -518,7 +537,7 @@ async function executeVideo(
 		});
 
 		return apiRequest.call(this, 'POST', '/v1/video/create', {
-			output_key: outputKey,
+			...baseBody,
 			spec,
 		} as IDataObject);
 	}
@@ -526,8 +545,7 @@ async function executeVideo(
 	// ── Custom Command ───────────────────────────────────────
 	if (operation === 'customCommand') {
 		return apiRequest.call(this, 'POST', '/v1/video/ffmpeg-custom', {
-			input_key: inputKey,
-			output_key: outputKey,
+			...baseBody,
 			options: {
 				command: this.getNodeParameter('command', i) as string,
 			},

@@ -621,47 +621,48 @@ async function executeJob(
 		if (responseType === 'url') query = '?response=url';
 		else if (responseType === 'file') query = '?response=file';
 
-		if (responseType === 'file') {
-			// Download as binary file
-			const response = await this.helpers.httpRequestWithAuthentication.call(
+		if (responseType === 'url') {
+			// URL mode — always returns JSON
+			const responseData = await apiRequest.call(
 				this,
-				'videoApiHubApi',
-				{
-					method: 'GET',
-					url: `https://api.videoapihub.com/v1/result/${encodeURIComponent(taskId)}${query}`,
-					encoding: 'arraybuffer',
-					returnFullResponse: true,
-					json: false,
-				} as IHttpRequestOptions,
-			) as { body: Buffer; headers: IDataObject; statusCode: number };
-
-			// If still processing (202) or failed, the body is JSON — return as status
-			const contentType = (response.headers?.['content-type'] as string) ?? '';
-			if (contentType.includes('application/json')) {
-				const jsonData = JSON.parse(Buffer.from(response.body).toString('utf-8')) as IDataObject;
-				return { json: jsonData };
-			}
-
-			// Binary file response
-			const contentDisposition = (response.headers?.['content-disposition'] as string) ?? '';
-			const fileNameMatch = contentDisposition.match(/filename="?([^";\s]+)"?/);
-			const fileName = fileNameMatch?.[1] ?? `${taskId}.mp4`;
-			const binaryOutput = await this.helpers.prepareBinaryData(
-				Buffer.from(response.body),
-				fileName,
-				contentType || 'application/octet-stream',
+				'GET',
+				`/v1/result/${encodeURIComponent(taskId)}${query}`,
 			);
-
-			return { json: { task_id: taskId }, binary: { data: binaryOutput } };
+			return { json: responseData };
 		}
 
-		// Auto or URL — return JSON
-		const responseData = await apiRequest.call(
+		// Auto or File — may return binary, so use arraybuffer
+		const response = await this.helpers.httpRequestWithAuthentication.call(
 			this,
-			'GET',
-			`/v1/result/${encodeURIComponent(taskId)}${query}`,
+			'videoApiHubApi',
+			{
+				method: 'GET',
+				url: `https://api.videoapihub.com/v1/result/${encodeURIComponent(taskId)}${query}`,
+				encoding: 'arraybuffer',
+				returnFullResponse: true,
+				json: false,
+			} as IHttpRequestOptions,
+		) as { body: Buffer; headers: IDataObject; statusCode: number };
+
+		const contentType = (response.headers?.['content-type'] as string) ?? '';
+
+		// If response is JSON (still processing, failed, or signed_url result)
+		if (contentType.includes('application/json')) {
+			const jsonData = JSON.parse(Buffer.from(response.body).toString('utf-8')) as IDataObject;
+			return { json: jsonData };
+		}
+
+		// Binary file response
+		const contentDisposition = (response.headers?.['content-disposition'] as string) ?? '';
+		const fileNameMatch = contentDisposition.match(/filename="?([^";\s]+)"?/);
+		const fileName = fileNameMatch?.[1] ?? `${taskId}.bin`;
+		const binaryOutput = await this.helpers.prepareBinaryData(
+			Buffer.from(response.body),
+			fileName,
+			contentType || 'application/octet-stream',
 		);
-		return { json: responseData };
+
+		return { json: { task_id: taskId }, binary: { data: binaryOutput } };
 	}
 
 	throw new NodeOperationError(this.getNode(), `Unknown job operation: ${operation}`, {

@@ -627,7 +627,7 @@ async function executeJob(
 		let query = '';
 		if (responseType === 'url') query = '?response=url';
 		else if (responseType === 'file') query = '?response=file';
-		else if (responseType === 'public_url') query = '?response=url';
+		// public_url and auto: no query param — uses the job's stored output_type
 
 		if (responseType === 'url' || responseType === 'public_url') {
 			// URL mode — always returns JSON

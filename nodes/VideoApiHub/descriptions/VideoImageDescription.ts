@@ -71,9 +71,9 @@ export const videoImageDescription: INodeProperties[] = [
 		displayOptions: { show: { ...showFor, operation: allOps } },
 		options: [
 			{ name: 'File (Default)', value: 'file', description: 'Download the file directly when the job completes' },
-			{ name: 'Download Link', value: 'signed_url', description: 'Get a temporary download link that expires' },
 			{ name: 'Public URL', value: 'public_url', description: 'Get a permanent public link — no authentication needed' },
-			{ name: 'Save to Storage Only', value: 'stored', description: 'Just save it — no download link' },
+			{ name: 'Download Link', value: 'signed_url', description: 'Get a temporary download link that expires' },
+			{ name: 'Save to Storage Only', value: 'stored', description: 'View the file in your VideoApiHub dashboard, or use the File > Download node with the output key' },
 		],
 		default: 'file',
 		description: 'How you want to receive the finished result',

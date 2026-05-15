@@ -47,14 +47,14 @@ export const jobDescription: INodeProperties[] = [
 				description: 'Download the output file directly',
 			},
 			{
-				name: 'Download Link',
-				value: 'url',
-				description: 'Get a temporary download URL',
-			},
-			{
 				name: 'Public URL',
 				value: 'public_url',
 				description: 'Get a permanent public link — no authentication needed',
+			},
+			{
+				name: 'Download Link',
+				value: 'url',
+				description: 'Get a temporary download URL',
 			},
 		],
 		default: 'auto',

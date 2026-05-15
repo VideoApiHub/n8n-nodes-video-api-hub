@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-video-api-hub",
-	"version": "0.2.2",
+	"version": "0.3.0",
 	"description": "n8n nodes for VideoApiHub – process, create, and transform videos",
 	"license": "MIT",
 	"homepage": "https://github.com/VideoApiHub/n8n-nodes-video-api-hub",

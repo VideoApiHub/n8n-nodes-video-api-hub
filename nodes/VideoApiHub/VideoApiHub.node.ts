@@ -6,9 +6,9 @@ import type {
 	IHttpRequestOptions,
 	IHttpRequestMethods,
 	IDataObject,
+	JsonObject,
 } from 'n8n-workflow';
 import { NodeConnectionTypes, NodeApiError, NodeOperationError } from 'n8n-workflow';
-import type { JsonObject } from 'n8n-workflow';
 
 /* eslint-disable @n8n/community-nodes/options-sorted-alphabetically */
 
@@ -114,19 +114,16 @@ export class VideoApiHub implements INodeType {
 						pairedItem: { item: i },
 					});
 				} else {
-					if (error instanceof NodeOperationError || error instanceof NodeApiError) {
-						error.context = {
-							...error.context,
-							itemIndex: i,
-						};
+					if (error instanceof NodeApiError) {
+						error.context = { ...error.context, itemIndex: i };
 						throw error;
 					}
-					// Wrap HTTP-shaped errors (from httpRequestWithAuthentication) with NodeApiError
-					// to preserve status code, response body, and headers in the n8n UI.
-					if ((error as JsonObject).statusCode || (error as JsonObject).response) {
-						throw new NodeApiError(this.getNode(), error as JsonObject, { itemIndex: i });
+					if (error instanceof NodeOperationError) {
+						error.context = { ...error.context, itemIndex: i };
+						throw error;
 					}
-					throw new NodeOperationError(this.getNode(), error as Error, { itemIndex: i });
+					// Wrap any other error as NodeApiError
+					throw new NodeApiError(this.getNode(), error as JsonObject, { itemIndex: i });
 				}
 			}
 		}

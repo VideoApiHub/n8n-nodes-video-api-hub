@@ -670,7 +670,7 @@ async function executeJob(
 			contentType || 'application/octet-stream',
 		);
 
-		return { json: { task_id: taskId }, binary: { data: binaryOutput } };
+		return { json: { task_id: taskId, status: 'completed' }, binary: { data: binaryOutput } };
 	}
 
 	throw new NodeOperationError(this.getNode(), `Unknown job operation: ${operation}`, {

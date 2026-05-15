@@ -612,53 +612,56 @@ async function executeJob(
 	operation: string,
 	i: number,
 ): Promise<INodeExecutionData> {
-	if (operation === 'getStatus') {
+	if (operation === 'getResult') {
 		const taskId = this.getNodeParameter('taskId', i) as string;
+		const responseType = this.getNodeParameter('resultResponseType', i) as string;
+
+		// Build query string for response override
+		let query = '';
+		if (responseType === 'url') query = '?response=url';
+		else if (responseType === 'file') query = '?response=file';
+
+		if (responseType === 'file') {
+			// Download as binary file
+			const response = await this.helpers.httpRequestWithAuthentication.call(
+				this,
+				'videoApiHubApi',
+				{
+					method: 'GET',
+					url: `https://api.videoapihub.com/v1/result/${encodeURIComponent(taskId)}${query}`,
+					encoding: 'arraybuffer',
+					returnFullResponse: true,
+					json: false,
+				} as IHttpRequestOptions,
+			) as { body: Buffer; headers: IDataObject; statusCode: number };
+
+			// If still processing (202) or failed, the body is JSON — return as status
+			const contentType = (response.headers?.['content-type'] as string) ?? '';
+			if (contentType.includes('application/json')) {
+				const jsonData = JSON.parse(Buffer.from(response.body).toString('utf-8')) as IDataObject;
+				return { json: jsonData };
+			}
+
+			// Binary file response
+			const contentDisposition = (response.headers?.['content-disposition'] as string) ?? '';
+			const fileNameMatch = contentDisposition.match(/filename="?([^";\s]+)"?/);
+			const fileName = fileNameMatch?.[1] ?? `${taskId}.mp4`;
+			const binaryOutput = await this.helpers.prepareBinaryData(
+				Buffer.from(response.body),
+				fileName,
+				contentType || 'application/octet-stream',
+			);
+
+			return { json: { task_id: taskId }, binary: { data: binaryOutput } };
+		}
+
+		// Auto or URL — return JSON
 		const responseData = await apiRequest.call(
 			this,
 			'GET',
-			`/v1/jobs/${encodeURIComponent(taskId)}`,
+			`/v1/result/${encodeURIComponent(taskId)}${query}`,
 		);
 		return { json: responseData };
-	}
-
-	if (operation === 'getResult') {
-		const taskId = this.getNodeParameter('resultTaskId', i) as string;
-		const responseType = this.getNodeParameter('resultResponseType', i) as string;
-
-		if (responseType === 'url') {
-			const responseData = await apiRequest.call(
-				this,
-				'GET',
-				`/v1/jobs/${encodeURIComponent(taskId)}?response=url`,
-			);
-			return { json: responseData };
-		}
-
-		// Download as binary file
-		const response = await this.helpers.httpRequestWithAuthentication.call(
-			this,
-			'videoApiHubApi',
-			{
-				method: 'GET',
-				url: `https://api.videoapihub.com/v1/jobs/${encodeURIComponent(taskId)}?response=file`,
-				encoding: 'arraybuffer',
-				returnFullResponse: true,
-				json: false,
-			} as IHttpRequestOptions,
-		) as { body: Buffer; headers: IDataObject };
-
-		const contentDisposition = (response.headers?.['content-disposition'] as string) ?? '';
-		const fileNameMatch = contentDisposition.match(/filename="?([^";\s]+)"?/);
-		const fileName = fileNameMatch?.[1] ?? `${taskId}.mp4`;
-		const contentType = (response.headers?.['content-type'] as string) ?? 'video/mp4';
-		const binaryOutput = await this.helpers.prepareBinaryData(
-			Buffer.from(response.body),
-			fileName,
-			contentType,
-		);
-
-		return { json: { task_id: taskId }, binary: { data: binaryOutput } };
 	}
 
 	throw new NodeOperationError(this.getNode(), `Unknown job operation: ${operation}`, {

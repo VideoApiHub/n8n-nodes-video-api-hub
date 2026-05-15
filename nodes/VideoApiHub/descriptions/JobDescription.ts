@@ -11,43 +11,24 @@ export const jobDescription: INodeProperties[] = [
 		displayOptions: { show: showForJob },
 		options: [
 			{
-				name: 'Check Status',
-				value: 'getStatus',
-				action: 'Check the status of a job',
-				description: 'See if a video job is queued, processing, completed, or failed',
-			},
-			{
 				name: 'Get Result',
 				value: 'getResult',
-				action: 'Get the result of a completed job',
-				description: 'Download the output file or get a download link',
+				action: 'Get the result of a job',
+				description: 'Check status and get the result — returns status if still processing, or the finished output',
 			},
 		],
-		default: 'getStatus',
+		default: 'getResult',
 	},
 
-	// ── Check Status ─────────────────────────────────────────
 	{
 		displayName: 'Task ID',
 		name: 'taskId',
 		type: 'string',
 		required: true,
-		displayOptions: { show: { ...showForJob, operation: ['getStatus'] } },
-		default: '',
-		placeholder: 'abc123-def456',
-		description: 'The Task ID returned when you submitted the job',
-	},
-
-	// ── Get Result ───────────────────────────────────────────
-	{
-		displayName: 'Task ID',
-		name: 'resultTaskId',
-		type: 'string',
-		required: true,
 		displayOptions: { show: { ...showForJob, operation: ['getResult'] } },
 		default: '',
 		placeholder: 'abc123-def456',
-		description: 'The Task ID of the completed job',
+		description: 'The Task ID returned when you submitted the job',
 	},
 	{
 		displayName: 'Return As',
@@ -56,17 +37,22 @@ export const jobDescription: INodeProperties[] = [
 		displayOptions: { show: { ...showForJob, operation: ['getResult'] } },
 		options: [
 			{
-				name: 'File',
-				value: 'file',
-				description: 'Download the output file directly',
+				name: 'Auto (Use Job Settings)',
+				value: 'auto',
+				description: 'Use the output type set when the job was created',
 			},
 			{
 				name: 'Download Link',
 				value: 'url',
 				description: 'Get a temporary download URL',
 			},
+			{
+				name: 'File',
+				value: 'file',
+				description: 'Download the output file directly',
+			},
 		],
-		default: 'file',
-		description: 'How to return the result',
+		default: 'auto',
+		description: 'How to return the result when the job is complete',
 	},
 ];

@@ -20,6 +20,7 @@ import { videoAudioDescription } from './descriptions/VideoAudioDescription';
 import { videoImageDescription } from './descriptions/VideoImageDescription';
 import { templateDescription } from './descriptions/TemplateDescription';
 import { jobDescription } from './descriptions/JobDescription';
+import { videoHtmlDescription } from './descriptions/VideoHtmlDescription';
 
 async function apiRequest(
 	this: IExecuteFunctions,
@@ -70,6 +71,7 @@ export class VideoApiHub implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				options: [
+					{ name: 'HTML Video', value: 'videoHtml' },
 					{ name: 'Template', value: 'template' },
 					{ name: 'Create Video', value: 'videoCreate' },
 					{ name: 'Edit Video', value: 'videoEdit' },
@@ -80,6 +82,7 @@ export class VideoApiHub implements INodeType {
 				],
 				default: 'videoCreate',
 			},
+			...videoHtmlDescription,
 			...templateDescription,
 			...videoCreateDescription,
 			...videoEditDescription,
@@ -102,6 +105,9 @@ export class VideoApiHub implements INodeType {
 
 				if (resource === 'template') {
 					const responseData = await executeTemplate.call(this, operation, i);
+					result = { json: responseData, pairedItem: { item: i } };
+				} else if (resource === 'videoHtml') {
+					const responseData = await executeVideoHtml.call(this, operation, i);
 					result = { json: responseData, pairedItem: { item: i } };
 				} else if (resource === 'videoCreate' || resource === 'videoEdit' || resource === 'videoAudio' || resource === 'videoImage') {
 					const responseData = await executeVideo.call(this, operation, i);
@@ -140,6 +146,54 @@ export class VideoApiHub implements INodeType {
 
 		return [returnData];
 	}
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HTML VIDEO
+// ═══════════════════════════════════════════════════════════════
+
+async function executeVideoHtml(
+	this: IExecuteFunctions,
+	operation: string,
+	i: number,
+): Promise<IDataObject> {
+	if (operation === 'createHtml') {
+		const html = this.getNodeParameter('html', i) as string;
+		const body: IDataObject = {
+			html_base64: Buffer.from(html).toString('base64'),
+			width: this.getNodeParameter('width', i, 1920) as number,
+			height: this.getNodeParameter('height', i, 1080) as number,
+			fps: this.getNodeParameter('fps', i, 30) as number,
+			output_format: this.getNodeParameter('outputFormat', i, 'mp4') as string,
+		};
+
+		const outputType = this.getNodeParameter('outputType', i) as string;
+		body.output_type = outputType;
+
+		if (outputType === 'signed_url') {
+			body.output_expiry = this.getNodeParameter('outputExpiry', i, 3600) as number;
+		}
+
+		const outputOpts = this.getNodeParameter('outputOptions', i, {}) as IDataObject;
+		if (outputOpts.outputKey) body.output_key = outputOpts.outputKey;
+
+		const varsData = this.getNodeParameter('htmlVariables', i, {}) as {
+			variableValues?: Array<{ name: string; value: string }>;
+		};
+		if (varsData.variableValues && varsData.variableValues.length > 0) {
+			const variables: IDataObject = {};
+			for (const v of varsData.variableValues) {
+				if (v.name) variables[v.name] = v.value;
+			}
+			body.variables = variables;
+		}
+
+		return apiRequest.call(this, 'POST', '/v1/video/create-html', body);
+	}
+
+	throw new NodeOperationError(this.getNode(), `Unknown HTML video operation: ${operation}`, {
+		itemIndex: i,
+	});
 }
 
 // ═══════════════════════════════════════════════════════════════

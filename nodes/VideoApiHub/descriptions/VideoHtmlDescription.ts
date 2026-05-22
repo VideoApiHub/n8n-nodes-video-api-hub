@@ -1,7 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
 
-/* eslint-disable n8n-nodes-base/node-param-options-type-unsorted-items */
-
 const showFor = { resource: ['videoHtml'] };
 
 export const videoHtmlDescription: INodeProperties[] = [
@@ -33,7 +31,7 @@ export const videoHtmlDescription: INodeProperties[] = [
 		required: true,
 		displayOptions: { show: { ...showFor, operation: ['createHtml'] } },
 		default: '',
-		placeholder: '<div data-composition-id="main" data-start="0" data-width="1920" data-height="1080">...</div>',
+		placeholder: '<div data-composition-ID="main" data-start="0" ...>...</div>',
 		description: 'The HTML composition to render. Use GSAP for animations, CSS for styling, and Hyperframes data attributes for timing. The HTML will be Base64-encoded before sending to the API.',
 	},
 

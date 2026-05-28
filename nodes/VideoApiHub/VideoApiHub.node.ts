@@ -213,12 +213,13 @@ async function executeVideoReact(
 ): Promise<IDataObject> {
 	if (operation === 'createReact') {
 		const durationInSeconds = this.getNodeParameter('durationInSeconds', i, 20) as number;
+		const fps = this.getNodeParameter('fps', i, 30) as number;
 		const body: IDataObject = {
 			component_code: this.getNodeParameter('componentCode', i) as string,
 			width: this.getNodeParameter('width', i, 1920) as number,
 			height: this.getNodeParameter('height', i, 1080) as number,
-			fps: this.getNodeParameter('fps', i, 30) as number,
-			duration_in_frames: durationInSeconds * 60,
+			fps,
+			duration_in_frames: durationInSeconds * fps,
 			codec: this.getNodeParameter('codec', i, 'h264') as string,
 			output_format: this.getNodeParameter('outputFormat', i, 'mp4') as string,
 		};

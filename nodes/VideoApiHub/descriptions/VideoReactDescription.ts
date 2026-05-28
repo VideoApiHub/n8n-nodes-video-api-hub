@@ -13,7 +13,7 @@ export const videoReactDescription: INodeProperties[] = [
 			{
 				name: 'Create React Video',
 				value: 'createReact',
-				action: 'Create a video from a React component',
+				action: 'Create a video from a react component',
 				description: 'Render a React/Remotion component to video',
 			},
 		],
@@ -108,9 +108,9 @@ export const videoReactDescription: INodeProperties[] = [
 		options: [
 			{ name: 'H.264 (Default)', value: 'h264' },
 			{ name: 'H.265', value: 'h265' },
+			{ name: 'ProRes', value: 'prores' },
 			{ name: 'VP8', value: 'vp8' },
 			{ name: 'VP9', value: 'vp9' },
-			{ name: 'ProRes', value: 'prores' },
 		],
 		default: 'h264',
 		description: 'Video codec to use for encoding',

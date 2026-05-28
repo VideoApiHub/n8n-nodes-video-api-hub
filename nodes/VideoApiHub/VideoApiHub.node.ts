@@ -212,13 +212,13 @@ async function executeVideoReact(
 	i: number,
 ): Promise<IDataObject> {
 	if (operation === 'createReact') {
+		const durationInSeconds = this.getNodeParameter('durationInSeconds', i, 20) as number;
 		const body: IDataObject = {
 			component_code: this.getNodeParameter('componentCode', i) as string,
-			composition: this.getNodeParameter('composition', i, 'UserComposition') as string,
 			width: this.getNodeParameter('width', i, 1920) as number,
 			height: this.getNodeParameter('height', i, 1080) as number,
 			fps: this.getNodeParameter('fps', i, 30) as number,
-			duration_in_frames: this.getNodeParameter('durationInFrames', i, 600) as number,
+			duration_in_frames: durationInSeconds * 60,
 			codec: this.getNodeParameter('codec', i, 'h264') as string,
 			output_format: this.getNodeParameter('outputFormat', i, 'mp4') as string,
 		};
@@ -238,7 +238,7 @@ async function executeVideoReact(
 		const outputOpts = this.getNodeParameter('outputOptions', i, {}) as IDataObject;
 		if (outputOpts.outputKey) body.output_key = outputOpts.outputKey;
 
-		return apiRequest.call(this, 'POST', '/v1/video/create-react', body);
+		return apiRequest.call(this, 'POST', '/v1/video/create/react', body);
 	}
 
 	throw new NodeOperationError(this.getNode(), `Unknown React video operation: ${operation}`, {

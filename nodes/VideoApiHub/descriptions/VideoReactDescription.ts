@@ -35,16 +35,6 @@ export const videoReactDescription: INodeProperties[] = [
 		description: 'React/TSX source code. Must export default. Max 120 KB. Only react and remotion imports are allowed.',
 	},
 
-	// ── Composition ──────────────────────────────────────────
-	{
-		displayName: 'Composition ID',
-		name: 'composition',
-		type: 'string',
-		displayOptions: { show: { ...showFor, operation: ['createReact'] } },
-		default: 'UserComposition',
-		description: 'The Remotion composition ID to render',
-	},
-
 	// ── Props ─────────────────────────────────────────────────
 	{
 		displayName: 'Props (JSON)',
@@ -88,15 +78,15 @@ export const videoReactDescription: INodeProperties[] = [
 		description: 'Frames per second (1–120)',
 	},
 
-	// ── Duration in Frames ───────────────────────────────────
+	// ── Duration in Seconds ──────────────────────────────────
 	{
-		displayName: 'Duration in Frames',
-		name: 'durationInFrames',
+		displayName: 'Duration in Seconds',
+		name: 'durationInSeconds',
 		type: 'number',
 		displayOptions: { show: { ...showFor, operation: ['createReact'] } },
-		typeOptions: { minValue: 15, maxValue: 18000 },
-		default: 600,
-		description: 'Total number of frames to render (15–18000)',
+		typeOptions: { minValue: 1, maxValue: 600 },
+		default: 20,
+		description: 'Total duration of the video in seconds (1–600)',
 	},
 
 	// ── Codec ─────────────────────────────────────────────────

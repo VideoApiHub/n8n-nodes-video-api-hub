@@ -21,6 +21,7 @@ import { videoImageDescription } from './descriptions/VideoImageDescription';
 import { templateDescription } from './descriptions/TemplateDescription';
 import { jobDescription } from './descriptions/JobDescription';
 import { videoHtmlDescription } from './descriptions/VideoHtmlDescription';
+import { videoReactDescription } from './descriptions/VideoReactDescription';
 
 async function apiRequest(
 	this: IExecuteFunctions,
@@ -72,6 +73,7 @@ export class VideoApiHub implements INodeType {
 				noDataExpression: true,
 				options: [
 					{ name: 'HTML Video', value: 'videoHtml' },
+					{ name: 'React Video', value: 'videoReact' },
 					{ name: 'Template', value: 'template' },
 					{ name: 'Create Video', value: 'videoCreate' },
 					{ name: 'Edit Video', value: 'videoEdit' },
@@ -83,6 +85,7 @@ export class VideoApiHub implements INodeType {
 				default: 'videoCreate',
 			},
 			...videoHtmlDescription,
+			...videoReactDescription,
 			...templateDescription,
 			...videoCreateDescription,
 			...videoEditDescription,
@@ -108,6 +111,9 @@ export class VideoApiHub implements INodeType {
 					result = { json: responseData, pairedItem: { item: i } };
 				} else if (resource === 'videoHtml') {
 					const responseData = await executeVideoHtml.call(this, operation, i);
+					result = { json: responseData, pairedItem: { item: i } };
+				} else if (resource === 'videoReact') {
+					const responseData = await executeVideoReact.call(this, operation, i);
 					result = { json: responseData, pairedItem: { item: i } };
 				} else if (resource === 'videoCreate' || resource === 'videoEdit' || resource === 'videoAudio' || resource === 'videoImage') {
 					const responseData = await executeVideo.call(this, operation, i);
@@ -192,6 +198,50 @@ async function executeVideoHtml(
 	}
 
 	throw new NodeOperationError(this.getNode(), `Unknown HTML video operation: ${operation}`, {
+		itemIndex: i,
+	});
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REACT VIDEO
+// ═══════════════════════════════════════════════════════════════
+
+async function executeVideoReact(
+	this: IExecuteFunctions,
+	operation: string,
+	i: number,
+): Promise<IDataObject> {
+	if (operation === 'createReact') {
+		const body: IDataObject = {
+			component_code: this.getNodeParameter('componentCode', i) as string,
+			composition: this.getNodeParameter('composition', i, 'UserComposition') as string,
+			width: this.getNodeParameter('width', i, 1920) as number,
+			height: this.getNodeParameter('height', i, 1080) as number,
+			fps: this.getNodeParameter('fps', i, 30) as number,
+			duration_in_frames: this.getNodeParameter('durationInFrames', i, 600) as number,
+			codec: this.getNodeParameter('codec', i, 'h264') as string,
+			output_format: this.getNodeParameter('outputFormat', i, 'mp4') as string,
+		};
+
+		const propsJson = this.getNodeParameter('props', i, '{}') as string;
+		if (propsJson && propsJson !== '{}') {
+			body.props = JSON.parse(propsJson);
+		}
+
+		const outputType = this.getNodeParameter('outputType', i) as string;
+		body.output_type = outputType;
+
+		if (outputType === 'signed_url') {
+			body.output_expiry = this.getNodeParameter('outputExpiry', i, 3600) as number;
+		}
+
+		const outputOpts = this.getNodeParameter('outputOptions', i, {}) as IDataObject;
+		if (outputOpts.outputKey) body.output_key = outputOpts.outputKey;
+
+		return apiRequest.call(this, 'POST', '/v1/video/create-react', body);
+	}
+
+	throw new NodeOperationError(this.getNode(), `Unknown React video operation: ${operation}`, {
 		itemIndex: i,
 	});
 }

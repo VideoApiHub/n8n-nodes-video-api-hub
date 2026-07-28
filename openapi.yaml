@@ -393,6 +393,35 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "429": { $ref: "#/components/responses/UsageLimitExceeded" }
 
+  /v1/video/caption:
+    post:
+      operationId: videoCaption
+      summary: Auto-add stylish captions to a video
+      description: |
+        Transcribe a short video and burn in animated, word-level captions using a chosen style preset.
+      tags: [Video]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaptionVideoRequest"
+            example:
+              input_key: uploads/reel.mp4
+              output_key: outputs/reel-captioned.mp4
+              options:
+                style_preset: neon-pop
+                prompt: Emphasize numbers and calls to action
+                brolls: true
+                width: 1080
+                height: 1920
+                duration_secs: 30
+      responses:
+        "202": { $ref: "#/components/responses/JobAccepted" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/UsageLimitExceeded" }
+
   /v1/templates/{template_id}/render:
     post:
       operationId: renderTemplate
@@ -518,6 +547,49 @@ components:
         input_key: { type: string, description: S3 key of the input file }
         output_key: { type: string, description: S3 key for the output }
         options: { type: object, additionalProperties: true }
+
+    CaptionVideoRequest:
+      type: object
+      required: [input_key]
+      properties:
+        input_key: { type: string, description: S3 key or public HTTPS URL of the source video }
+        output_key: { type: string, description: S3 key for the captioned output }
+        output_type:
+          type: string
+          enum: [signed_url, file, stored, public_url]
+          default: signed_url
+        output_expiry: { type: integer, description: Signed URL TTL in seconds }
+        options:
+          type: object
+          properties:
+            style_preset:
+              type: string
+              enum:
+                - neon-pop
+                - clean-minimal
+                - bold-yellow-karaoke
+                - tiktok-white-stroke
+                - cinematic-serif
+                - gradient-glow
+                - meme-impact
+                - podcast-lower-third
+                - kinetic-typography
+                - dynamic-size
+              default: neon-pop
+            prompt: { type: string }
+            brolls: { type: boolean, default: false }
+            broll_images:
+              type: array
+              items: { type: string, format: uri }
+            broll_position:
+              type: string
+              enum: [top, center, bottom]
+              default: top
+            language: { type: string }
+            width: { type: integer }
+            height: { type: integer }
+            duration_secs: { type: number }
+            email: { type: string }
 
     JSONVideoRenderRequest:
       type: object

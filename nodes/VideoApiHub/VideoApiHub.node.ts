@@ -22,6 +22,7 @@ import { templateDescription } from './descriptions/TemplateDescription';
 import { jobDescription } from './descriptions/JobDescription';
 import { videoHtmlDescription } from './descriptions/VideoHtmlDescription';
 import { videoReactDescription } from './descriptions/VideoReactDescription';
+import { videoCaptionDescription } from './descriptions/VideoCaptionDescription';
 
 async function apiRequest(
 	this: IExecuteFunctions,
@@ -79,6 +80,7 @@ export class VideoApiHub implements INodeType {
 					{ name: 'Edit Video', value: 'videoEdit' },
 					{ name: 'Video Audio', value: 'videoAudio' },
 					{ name: 'Video Thumbnail', value: 'videoImage' },
+					{ name: 'Auto Caption Video', value: 'videoCaption' },
 					{ name: 'Job', value: 'job' },
 					{ name: 'File', value: 'file' },
 				],
@@ -91,6 +93,7 @@ export class VideoApiHub implements INodeType {
 			...videoEditDescription,
 			...videoAudioDescription,
 			...videoImageDescription,
+			...videoCaptionDescription,
 			...jobDescription,
 			...fileDescription,
 		],
@@ -117,6 +120,9 @@ export class VideoApiHub implements INodeType {
 					result = { json: responseData, pairedItem: { item: i } };
 				} else if (resource === 'videoCreate' || resource === 'videoEdit' || resource === 'videoAudio' || resource === 'videoImage') {
 					const responseData = await executeVideo.call(this, operation, i);
+					result = { json: responseData, pairedItem: { item: i } };
+				} else if (resource === 'videoCaption') {
+					const responseData = await executeVideoCaption.call(this, operation, i);
 					result = { json: responseData, pairedItem: { item: i } };
 				} else if (resource === 'job') {
 					result = await executeJob.call(this, operation, i);
@@ -328,6 +334,56 @@ async function executeFile(
 	throw new NodeOperationError(this.getNode(), `Unknown file operation: ${operation}`, {
 		itemIndex: i,
 	});
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VIDEO CAPTION
+// ═══════════════════════════════════════════════════════════════
+
+async function executeVideoCaption(
+	this: IExecuteFunctions,
+	operation: string,
+	i: number,
+): Promise<IDataObject> {
+	if (operation !== 'addStylishCaption') {
+		throw new NodeOperationError(this.getNode(), `Unknown caption operation: ${operation}`, {
+			itemIndex: i,
+		});
+	}
+
+	const body: IDataObject = {
+		input_key: this.getNodeParameter('inputKey', i) as string,
+		output_type: this.getNodeParameter('outputType', i, 'signed_url') as string,
+		options: {
+			style_preset: this.getNodeParameter('stylePreset', i, 'neon-pop') as string,
+			prompt: this.getNodeParameter('prompt', i, '') as string,
+			brolls: this.getNodeParameter('brolls', i, false) as boolean,
+			broll_position: this.getNodeParameter('brollPosition', i, 'top') as string,
+			language: this.getNodeParameter('language', i, '') as string,
+			width: this.getNodeParameter('width', i, 1080) as number,
+			height: this.getNodeParameter('height', i, 1920) as number,
+			duration_secs: this.getNodeParameter('durationSecs', i, 30) as number,
+			email: this.getNodeParameter('email', i, '') as string,
+		},
+	};
+
+	if (body.output_type === 'signed_url') {
+		body.output_expiry = this.getNodeParameter('outputExpiry', i, 3600) as number;
+	}
+
+	const outputOpts = this.getNodeParameter('outputOptions', i, {}) as IDataObject;
+	if (outputOpts.outputKey) body.output_key = outputOpts.outputKey;
+
+	const brollImages = this.getNodeParameter('brollImages', i, '') as string;
+	if (brollImages) {
+		const options = body.options as IDataObject;
+		options.broll_images = brollImages
+			.split(',')
+			.map((item) => item.trim())
+			.filter(Boolean);
+	}
+
+	return apiRequest.call(this, 'POST', '/v1/video/caption', body);
 }
 
 // ═══════════════════════════════════════════════════════════════

@@ -1,7 +1,6 @@
 import type { INodeProperties } from 'n8n-workflow';
 
 /* eslint-disable n8n-nodes-base/node-param-options-type-unsorted-items */
-/* eslint-disable n8n-nodes-base/node-param-display-name-miscased */
 
 const showFor = { resource: ['videoCaption'] };
 
@@ -30,7 +29,7 @@ export const videoCaptionDescription: INodeProperties[] = [
 		displayOptions: { show: showFor },
 		default: '',
 		placeholder: 'uploads/reel.mp4 or https://example.com/video.mp4',
-		description: 'Paste a storage key from your upload step, or a public HTTPS URL.',
+		description: 'Paste a storage key from your upload step, or a public HTTPS URL',
 	},
 	{
 		displayName: 'How to Get the Result',
@@ -83,7 +82,7 @@ export const videoCaptionDescription: INodeProperties[] = [
 		displayOptions: { show: showFor },
 		default: '',
 		placeholder: 'Emphasize numbers and calls to action',
-		description: 'Optional natural-language guidance for the AI style and emphasis plan.',
+		description: 'Optional natural-language guidance for the AI style and emphasis plan',
 	},
 	{
 		displayName: 'Add B-Roll Clips',
@@ -91,7 +90,7 @@ export const videoCaptionDescription: INodeProperties[] = [
 		type: 'boolean',
 		displayOptions: { show: showFor },
 		default: false,
-		description: 'Auto-insert relevant b-roll clips around the captions.',
+		description: 'Whether to auto-insert relevant b-roll clips around the captions',
 	},
 	{
 		displayName: 'B-Roll Image URLs',
@@ -101,7 +100,7 @@ export const videoCaptionDescription: INodeProperties[] = [
 		displayOptions: { show: showFor },
 		default: '',
 		placeholder: 'https://example.com/clip1.jpg, https://example.com/clip2.jpg',
-		description: 'Optional comma-separated HTTPS image URLs to use as b-roll sources.',
+		description: 'Optional comma-separated HTTPS image URLs to use as b-roll sources',
 	},
 	{
 		displayName: 'B-Roll Position',
@@ -114,7 +113,7 @@ export const videoCaptionDescription: INodeProperties[] = [
 			{ name: 'Bottom', value: 'bottom' },
 		],
 		default: 'top',
-		description: 'Where b-roll cutaways are vertically positioned.',
+		description: 'Where b-roll cutaways are vertically positioned',
 	},
 	{
 		displayName: 'Language Hint',
@@ -123,7 +122,7 @@ export const videoCaptionDescription: INodeProperties[] = [
 		displayOptions: { show: showFor },
 		default: '',
 		placeholder: 'en',
-		description: 'Optional ISO language hint for transcription.',
+		description: 'Optional ISO language hint for transcription',
 	},
 	{
 		displayName: 'Output Width (Pixels)',
@@ -148,7 +147,7 @@ export const videoCaptionDescription: INodeProperties[] = [
 		displayOptions: { show: showFor },
 		typeOptions: { minValue: 1, maxValue: 180 },
 		default: 30,
-		description: 'Optional clip duration in seconds. Free plans are usually capped at 10 seconds.',
+		description: 'Optional clip duration in seconds, with free plans usually capped at 10 seconds',
 	},
 	{
 		displayName: 'Email',
@@ -157,7 +156,7 @@ export const videoCaptionDescription: INodeProperties[] = [
 		displayOptions: { show: showFor },
 		default: '',
 		placeholder: 'you@example.com',
-		description: 'Optional email to associate with the job.',
+		description: 'Optional email to associate with the job',
 	},
 	{
 		displayName: 'Advanced Settings',

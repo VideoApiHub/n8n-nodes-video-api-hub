@@ -1,7 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
 
-/* eslint-disable n8n-nodes-base/node-param-options-type-unsorted-items */
-
 const showFor = { resource: ['videoCaption'] };
 
 export const videoCaptionDescription: INodeProperties[] = [
@@ -60,16 +58,16 @@ export const videoCaptionDescription: INodeProperties[] = [
 		type: 'options',
 		displayOptions: { show: showFor },
 		options: [
-			{ name: 'Neon Pop', value: 'neon-pop' },
-			{ name: 'Clean Minimal', value: 'clean-minimal' },
 			{ name: 'Bold Yellow Karaoke', value: 'bold-yellow-karaoke' },
-			{ name: 'TikTok White Stroke', value: 'tiktok-white-stroke' },
 			{ name: 'Cinematic Serif', value: 'cinematic-serif' },
-			{ name: 'Gradient Glow', value: 'gradient-glow' },
-			{ name: 'Meme Impact', value: 'meme-impact' },
-			{ name: 'Podcast Lower Third', value: 'podcast-lower-third' },
-			{ name: 'Kinetic Typography', value: 'kinetic-typography' },
+			{ name: 'Clean Minimal', value: 'clean-minimal' },
 			{ name: 'Dynamic Size', value: 'dynamic-size' },
+			{ name: 'Gradient Glow', value: 'gradient-glow' },
+			{ name: 'Kinetic Typography', value: 'kinetic-typography' },
+			{ name: 'Meme Impact', value: 'meme-impact' },
+			{ name: 'Neon Pop', value: 'neon-pop' },
+			{ name: 'Podcast Lower Third', value: 'podcast-lower-third' },
+			{ name: 'TikTok White Stroke', value: 'tiktok-white-stroke' },
 		],
 		default: 'neon-pop',
 		description: 'Choose the visual style for your animated captions',

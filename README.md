@@ -21,7 +21,13 @@ n8n-nodes-video-api-hub
 
 ## Resources & Operations
 
-One node, eight resources, covering the full Video Api Hub API.
+One node, nine resources, covering the full Video Api Hub API.
+
+### Auto Caption Video
+
+| Operation | Description |
+|-----------|-------------|
+| **Add Stylish Captions** (`addStylishCaption`) | Transcribe a video's audio and burn in animated, word-level captions. Choose a style preset, optionally add automatic or image-based b-roll, provide an ISO language hint, and set the output width and height |
 
 ### HTML Video ⭐
 

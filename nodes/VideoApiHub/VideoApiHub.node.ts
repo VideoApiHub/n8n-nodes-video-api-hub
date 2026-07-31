@@ -10,9 +10,6 @@ import type {
 } from 'n8n-workflow';
 import { NodeConnectionTypes, NodeApiError, NodeOperationError } from 'n8n-workflow';
 
-/* eslint-disable @n8n/community-nodes/options-sorted-alphabetically */
-/* eslint-disable n8n-nodes-base/node-param-options-type-unsorted-items */
-
 import { fileDescription } from './descriptions/FileDescription';
 import { videoCreateDescription } from './descriptions/VideoCreateDescription';
 import { videoEditDescription } from './descriptions/VideoEditDescription';
@@ -73,16 +70,16 @@ export class VideoApiHub implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				options: [
-					{ name: 'HTML Video', value: 'videoHtml' },
-					{ name: 'React Video', value: 'videoReact' },
-					{ name: 'Template', value: 'template' },
+					{ name: 'Auto Caption Video', value: 'videoCaption' },
 					{ name: 'Create Video', value: 'videoCreate' },
 					{ name: 'Edit Video', value: 'videoEdit' },
+					{ name: 'File', value: 'file' },
+					{ name: 'HTML Video', value: 'videoHtml' },
+					{ name: 'Job', value: 'job' },
+					{ name: 'React Video', value: 'videoReact' },
+					{ name: 'Template', value: 'template' },
 					{ name: 'Video Audio', value: 'videoAudio' },
 					{ name: 'Video Thumbnail', value: 'videoImage' },
-					{ name: 'Auto Caption Video', value: 'videoCaption' },
-					{ name: 'Job', value: 'job' },
-					{ name: 'File', value: 'file' },
 				],
 				default: 'videoCreate',
 			},

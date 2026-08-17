@@ -1,8 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
 
-/* eslint-disable n8n-nodes-base/node-param-options-type-unsorted-items */
-/* eslint-disable n8n-nodes-base/node-param-display-name-miscased */
-
 const showFor = { resource: ['videoEdit'] };
 
 const allOps = ['clip', 'multiClip', 'resize', 'convertFormat', 'customCommand'];
@@ -16,28 +13,28 @@ export const videoEditDescription: INodeProperties[] = [
 		displayOptions: { show: showFor },
 		options: [
 			{
-				name: 'Clip Video',
-				value: 'clip',
-				action: 'Clip a section from a video',
-				description: 'Cut out a specific time range from your video',
-			},
-			{
 				name: 'Clip Multiple Sections',
 				value: 'multiClip',
 				action: 'Clip multiple sections from a video',
 				description: 'Cut out several time ranges from your video at once',
 			},
 			{
-				name: 'Resize / Change Aspect Ratio',
-				value: 'resize',
-				action: 'Resize a video',
-				description: 'Change the size or aspect ratio (e.g. landscape to portrait)',
+				name: 'Clip Video',
+				value: 'clip',
+				action: 'Clip a section from a video',
+				description: 'Cut out a specific time range from your video',
 			},
 			{
 				name: 'Convert Format',
 				value: 'convertFormat',
 				action: 'Convert video format',
 				description: 'Convert between MP4, MOV, WebM, and MKV',
+			},
+			{
+				name: 'Resize / Change Aspect Ratio',
+				value: 'resize',
+				action: 'Resize a video',
+				description: 'Change the size or aspect ratio (e.g. landscape to portrait)',
 			},
 			{
 				name: 'Run Custom FFmpeg Command',
@@ -279,12 +276,12 @@ export const videoEditDescription: INodeProperties[] = [
 			show: { ...showFor, operation: ['resize'], sizeMode: ['preset'] },
 		},
 		options: [
-			{ name: '16:9 (Landscape / YouTube)', value: 'landscape_16_9' },
-			{ name: '9:16 (Portrait / Reels / TikTok)', value: 'mobile_9_16' },
 			{ name: '1:1 (Square / Instagram)', value: 'square_1_1' },
+			{ name: '16:9 (Landscape / YouTube)', value: 'landscape_16_9' },
+			{ name: '21:9 (Ultra-Wide)', value: 'ultrawide_21_9' },
 			{ name: '4:3 (Classic)', value: 'standard_4_3' },
 			{ name: '4:5 (Portrait / Facebook)', value: 'portrait_4_5' },
-			{ name: '21:9 (Ultra-wide)', value: 'ultrawide_21_9' },
+			{ name: '9:16 (Portrait / Reels / TikTok)', value: 'mobile_9_16' },
 		],
 		default: 'landscape_16_9',
 		description: 'The shape to resize your video to',

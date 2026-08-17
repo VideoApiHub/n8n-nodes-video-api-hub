@@ -348,20 +348,28 @@ async function executeVideoCaption(
 		});
 	}
 
+	const options: IDataObject = {
+		style_preset: this.getNodeParameter('stylePreset', i, 'neon-pop') as string,
+		brolls: this.getNodeParameter('brolls', i, false) as boolean,
+		broll_position: this.getNodeParameter('brollPosition', i, 'top') as string,
+		width: this.getNodeParameter('width', i, 1080) as number,
+		height: this.getNodeParameter('height', i, 1920) as number,
+		duration_secs: this.getNodeParameter('durationSecs', i, 30) as number,
+	};
+
+	const prompt = this.getNodeParameter('prompt', i, '') as string;
+	if (prompt) options.prompt = prompt;
+
+	const language = this.getNodeParameter('language', i, '') as string;
+	if (language) options.language = language;
+
+	const email = this.getNodeParameter('email', i, '') as string;
+	if (email) options.email = email;
+
 	const body: IDataObject = {
 		input_key: this.getNodeParameter('inputKey', i) as string,
 		output_type: this.getNodeParameter('outputType', i, 'signed_url') as string,
-		options: {
-			style_preset: this.getNodeParameter('stylePreset', i, 'neon-pop') as string,
-			prompt: this.getNodeParameter('prompt', i, '') as string,
-			brolls: this.getNodeParameter('brolls', i, false) as boolean,
-			broll_position: this.getNodeParameter('brollPosition', i, 'top') as string,
-			language: this.getNodeParameter('language', i, '') as string,
-			width: this.getNodeParameter('width', i, 1080) as number,
-			height: this.getNodeParameter('height', i, 1920) as number,
-			duration_secs: this.getNodeParameter('durationSecs', i, 30) as number,
-			email: this.getNodeParameter('email', i, '') as string,
-		},
+		options,
 	};
 
 	if (body.output_type === 'signed_url') {
@@ -371,13 +379,14 @@ async function executeVideoCaption(
 	const outputOpts = this.getNodeParameter('outputOptions', i, {}) as IDataObject;
 	if (outputOpts.outputKey) body.output_key = outputOpts.outputKey;
 
-	const brollImages = this.getNodeParameter('brollImages', i, '') as string;
-	if (brollImages) {
-		const options = body.options as IDataObject;
-		options.broll_images = brollImages
-			.split(',')
-			.map((item) => item.trim())
-			.filter(Boolean);
+	if ((body.options as IDataObject).brolls) {
+		const brollImages = this.getNodeParameter('brollImages', i, '') as string;
+		if (brollImages) {
+			options.broll_images = brollImages
+				.split(',')
+				.map((item) => item.trim())
+				.filter(Boolean);
+		}
 	}
 
 	return apiRequest.call(this, 'POST', '/v1/video/caption', body);

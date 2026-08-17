@@ -35,7 +35,7 @@ export const videoCaptionDescription: INodeProperties[] = [
 		type: 'options',
 		displayOptions: { show: showFor },
 		options: [
-			{ name: 'File (Default)', value: 'file', description: 'Download the file directly when the job completes' },
+			{ name: 'File', value: 'file', description: 'Download the file directly when the job completes' },
 			{ name: 'Public URL', value: 'public_url', description: 'Get a permanent public link — no authentication needed' },
 			{ name: 'Download Link', value: 'signed_url', description: 'Get a temporary download link that expires' },
 			{ name: 'Save to Storage Only', value: 'stored', description: 'Store the output in your VideoApiHub storage' },
@@ -95,7 +95,7 @@ export const videoCaptionDescription: INodeProperties[] = [
 		name: 'brollImages',
 		type: 'string',
 		typeOptions: { rows: 3 },
-		displayOptions: { show: showFor },
+		displayOptions: { show: { ...showFor, brolls: [true] } },
 		default: '',
 		placeholder: 'https://example.com/clip1.jpg, https://example.com/clip2.jpg',
 		description: 'Optional comma-separated HTTPS image URLs to use as b-roll sources',

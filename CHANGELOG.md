@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.4
+
+- Fix n8n description casing and option ordering violations
+- Hide and omit b-roll image URLs when b-roll is disabled
+- Omit empty optional caption fields from API requests
+- Correct the caption output type default label
+
 ## 0.6.0
 
 ### Added

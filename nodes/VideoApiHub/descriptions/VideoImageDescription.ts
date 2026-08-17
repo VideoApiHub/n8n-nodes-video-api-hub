@@ -1,8 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
 
-/* eslint-disable n8n-nodes-base/node-param-options-type-unsorted-items */
-/* eslint-disable n8n-nodes-base/node-param-collection-type-unsorted-items */
-
 const showFor = { resource: ['videoImage'] };
 
 const allOps = ['thumbnail', 'thumbnailWithText', 'screenshots'];
@@ -213,13 +210,13 @@ export const videoImageDescription: INodeProperties[] = [
 		type: 'options',
 		displayOptions: { show: { ...showFor, operation: ['thumbnailWithText'] } },
 		options: [
-			{ name: 'Top Left', value: 'top_left' },
-			{ name: 'Top Center', value: 'top_center' },
-			{ name: 'Top Right', value: 'top_right' },
-			{ name: 'Center', value: 'center' },
-			{ name: 'Bottom Left', value: 'bottom_left' },
 			{ name: 'Bottom Center', value: 'bottom_center' },
+			{ name: 'Bottom Left', value: 'bottom_left' },
 			{ name: 'Bottom Right', value: 'bottom_right' },
+			{ name: 'Center', value: 'center' },
+			{ name: 'Top Center', value: 'top_center' },
+			{ name: 'Top Left', value: 'top_left' },
+			{ name: 'Top Right', value: 'top_right' },
 		],
 		default: 'bottom_center',
 		description: 'Where to place the text on the image',
@@ -241,6 +238,13 @@ export const videoImageDescription: INodeProperties[] = [
 				description: 'Font name to use for the text',
 			},
 			{
+				displayName: 'Font Color',
+				name: 'fontColor',
+				type: 'color',
+				default: 'white',
+				description: 'Color of the text (name like "white" or hex like "#FF0000")',
+			},
+			{
 				displayName: 'Font Size',
 				name: 'fontSize',
 				type: 'number',
@@ -249,24 +253,11 @@ export const videoImageDescription: INodeProperties[] = [
 				description: 'Size of the text',
 			},
 			{
-				displayName: 'Font Color',
-				name: 'fontColor',
-				type: 'color',
-				default: 'white',
-				description: 'Color of the text (name like "white" or hex like "#FF0000")',
-			},
-			{
-				displayName: 'Text Effect',
-				name: 'effect',
-				type: 'options',
-				options: [
-					{ name: 'Shadow', value: 'shadow' },
-					{ name: 'Box', value: 'box' },
-					{ name: 'Outline', value: 'outline' },
-					{ name: 'None', value: 'none' },
-				],
-				default: 'shadow',
-				description: 'Visual effect applied to the text',
+				displayName: 'Overlay Height (Pixels)',
+				name: 'overlayHeight',
+				type: 'number',
+				default: 0,
+				description: 'Height of the overlay image (0 = original size)',
 			},
 			{
 				displayName: 'Overlay Image',
@@ -284,11 +275,17 @@ export const videoImageDescription: INodeProperties[] = [
 				description: 'Width of the overlay image (0 = original size)',
 			},
 			{
-				displayName: 'Overlay Height (Pixels)',
-				name: 'overlayHeight',
-				type: 'number',
-				default: 0,
-				description: 'Height of the overlay image (0 = original size)',
+				displayName: 'Text Effect',
+				name: 'effect',
+				type: 'options',
+				options: [
+					{ name: 'Shadow', value: 'shadow' },
+					{ name: 'Box', value: 'box' },
+					{ name: 'Outline', value: 'outline' },
+					{ name: 'None', value: 'none' },
+				],
+				default: 'shadow',
+				description: 'Visual effect applied to the text',
 			},
 		],
 	},
